@@ -1,0 +1,991 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>石头笔记</title>
+<style>
+  :root{
+    --paper:#ffffff;--bg:#f5f6f7;--ink:#0f1419;--ink-soft:#536471;--accent:#b5532a;
+    --line:#eff1f2;--hover:#f7f9f9;--blue:#1d9bf0;
+    --sans:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei","Segoe UI",Arial,sans-serif;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);
+    line-height:1.7;font-size:15px;-webkit-font-smoothing:antialiased;}
+
+  .topbar{max-width:600px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;
+    padding:12px 16px;border-bottom:1px solid var(--line);position:sticky;top:0;background:rgba(255,255,255,.92);backdrop-filter:blur(6px);z-index:5;}
+  .topbar .brand{font-weight:800;font-size:18px;letter-spacing:.02em;}
+  .topbar .brand small{color:var(--ink-soft);font-weight:500;font-size:12px;margin-left:6px;}
+  .navlink{font-size:14px;font-weight:600;color:var(--blue);background:none;border:none;cursor:pointer;padding:6px 4px;}
+  .navlink:hover{text-decoration:underline;}
+
+  .col{max-width:600px;margin:0 auto;background:var(--paper);min-height:80vh;}
+
+  .post{display:flex;gap:12px;padding:14px 16px;border-bottom:1px solid var(--line);}
+  .post:hover{background:var(--hover);}
+  .pbody{flex:1;min-width:0;}
+  .pmeta{display:flex;align-items:center;gap:5px;font-size:14px;flex-wrap:wrap;}
+  .pmeta .name{font-weight:800;}
+  .pmeta .handle{color:var(--ink-soft);}
+  .pmeta .place{color:var(--ink-soft);}
+  .pmeta .dot{color:var(--ink-soft);}
+  .ptext{margin:3px 0 0;font-size:15px;line-height:1.75;}
+  .ptext p{margin:0 0 8px;}
+  .ptext p:last-child{margin-bottom:0;}
+  .phinline{color:#9aa6ad;font-size:13px;margin:8px 0 0 !important;}
+
+  .feedbar{max-width:600px;margin:0 auto;padding:10px 16px;color:var(--ink-soft);font-size:13px;display:flex;justify-content:space-between;align-items:center;}
+  .feedbar button{font-size:13px;color:var(--blue);background:none;border:none;cursor:pointer;font-weight:600;}
+  .feedbar button:hover{text-decoration:underline;}
+
+  #logic{display:none;}
+  .intro{padding:18px 16px 6px;border-bottom:1px solid var(--line);}
+  .intro h2{font-size:20px;margin:0 0 6px;}
+  .intro p{color:var(--ink-soft);font-size:14px;margin:0;}
+  .mod{padding:18px 16px;border-bottom:1px solid var(--line);}
+  .mod h3{font-size:15px;font-weight:800;margin:0 0 12px;color:var(--accent);letter-spacing:.02em;}
+  .topic{display:flex;align-items:baseline;gap:8px;padding:9px 0;border-bottom:1px dashed var(--line);flex-wrap:wrap;}
+  .topic:last-child{border-bottom:none;}
+  .topic .zh{font-weight:700;font-size:15px;}
+  .topic .en{color:var(--ink-soft);font-size:12px;}
+  .topic .todo{color:#9aa6ad;font-size:12px;}
+  .topic .rel{margin-left:auto;font-size:12px;color:var(--blue);}
+  .topic .rel a{color:var(--blue);text-decoration:none;}
+  .topic .rel a:hover{text-decoration:underline;}
+
+  .foot{padding:22px 16px 60px;color:var(--ink-soft);font-size:12px;border-top:1px solid var(--line);}
+
+  .sentinel{max-width:600px;margin:0 auto;padding:22px 16px 64px;text-align:center;color:var(--ink-soft);font-size:13px;}
+  .sentinel.end{color:#9aa6ad;}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="brand">石头笔记 <small>@fieldnote</small></div>
+  <button class="navlink" id="toLogic">目录 / 逻辑</button>
+</div>
+
+<div id="feedView">
+  <div class="feedbar">
+    <span>随手记的野外观感 · 滑到底自动续 5 张</span>
+    <button onclick="renderFeed()">打乱顺序 ↻</button>
+  </div>
+  <div class="col" id="feed"></div>
+  <div id="sentinel" class="sentinel"></div>
+</div>
+
+<div id="logic">
+  <div class="intro">
+    <h2>按逻辑看 · 目录</h2>
+    <p>每条随手记的东西，背后都对应真实的地质原理和术语。下面是把它们归拢出的框架——先列骨架，内容（待写）之后填。点右上「石头笔记」回信息流。</p>
+  </div>
+  <div class="col">
+
+    <div class="mod">
+      <h3>一、石头从哪来</h3>
+      <div class="topic"><span class="zh">火成岩</span><span class="en">igneous rock</span><span class="todo">（内容待写）</span><span class="rel"><a href="#" onclick="backTo(3)">⑤</a> <a href="#" onclick="backTo(4)">⑥</a></span></div>
+      <div class="topic"><span class="zh">沉积岩</span><span class="en">sedimentary rock</span><span class="todo">（内容待写）</span><span class="rel"><a href="#" onclick="backTo(1)">①</a> <a href="#" onclick="backTo(12)">⑫</a></span></div>
+      <div class="topic"><span class="zh">变质岩</span><span class="en">metamorphic rock</span><span class="todo">（内容待写）</span><span class="rel"><a href="#" onclick="backTo(17)">⑰</a> <a href="#" onclick="backTo(97)">97</a></span></div>
+    </div>
+
+    <div class="mod">
+      <h3>二、石头有多硬</h3>
+      <div class="topic"><span class="zh">矿物 / 岩石</span><span class="en">mineral / rock</span><span class="todo">（内容待写）</span><span class="rel"><a href="#" onclick="backTo(2)">②</a> <a href="#" onclick="backTo(91)">91</a></span></div>
+      <div class="topic"><span class="zh">莫氏硬度</span><span class="en">Mohs scale</span><span class="todo">（内容待写）</span><span class="rel"><a href="#" onclick="backTo(2)">②</a></span></div>
+    </div>
+
+    <div class="mod">
+      <h3>三、大地的层与纹</h3>
+      <div class="topic"><span class="zh">层理</span><span class="en">bedding</span><span class="todo">（内容待写）</span><span class="rel"><a href="#" onclick="backTo(1)">①</a></span></div>
+      <div class="topic"><span class="zh">地层</span><span class="en">stratum</span><span class="todo">（内容待写）</span><span class="rel"><a href="#" onclick="backTo(1)">①</a></span></div>
+      <div class="topic"><span class="zh">河流阶地</span><span class="en">river terrace</span><span class="todo">（内容待写）</span><span class="rel"><a href="#" onclick="backTo(6)">⑥</a></span></div>
+    </div>
+
+    <div class="mod">
+      <h3>四、石头怎么变样</h3>
+      <div class="topic"><span class="zh">盐风化 / 蜂巢坑</span><span class="en">salt weathering · tafoni</span><span class="todo">（内容待写）</span><span class="rel"><a href="#" onclick="backTo(3)">⑤</a></span></div>
+      <div class="topic"><span class="zh">差异风化</span><span class="en">differential weathering</span><span class="todo">（内容待写）</span><span class="rel"><a href="#" onclick="backTo(8)">⑧</a></span></div>
+      <div class="topic"><span class="zh">喀斯特</span><span class="en">karst</span><span class="todo">（内容待写）</span><span class="rel"><a href="#" onclick="backTo(7)">⑦</a> <a href="#" onclick="backTo(112)">112</a></span></div>
+      <div class="topic"><span class="zh">风化与岩石循环</span><span class="en">weathering · rock cycle</span><span class="todo">（内容待写）</span><span class="rel"><a href="#" onclick="backTo(22)">㉒</a></span></div>
+      <div class="topic"><span class="zh">球状风化</span><span class="en">spheroidal weathering</span><span class="todo">（内容待写）</span><span class="rel"><a href="#" onclick="backTo(84)">84</a></span></div>
+      <div class="topic"><span class="zh">天坑 / 落水洞</span><span class="en">sinkhole · doline</span><span class="todo">（内容待写）</span><span class="rel"><a href="#" onclick="backTo(87)">87</a></span></div>
+      <div class="topic"><span class="zh">砖红土 / 铝土矿（风化壳）</span><span class="en">laterite · bauxite</span><span class="todo">（内容待写）</span><span class="rel"><a href="#" onclick="backTo(79)">79</a></span></div>
+    </div>
+
+    <div class="mod">
+      <h3>五、水与风的手艺</h3>
+      <div class="topic"><span class="zh">磨圆度</span><span class="en">roundness</span><span class="todo">（内容待写）</span><span class="rel"><a href="#" onclick="backTo(2)">②</a></span></div>
+      <div class="topic"><span class="zh">搬运与沉积</span><span class="en">transport / deposition</span><span class="todo">（内容待写）</span><span class="rel"><a href="#" onclick="backTo(2)">②</a></span></div>
+      <div class="topic"><span class="zh">曲流 / 牛轭湖</span><span class="en">meander / oxbow</span><span class="todo">（内容待写）</span><span class="rel"><a href="#" onclick="backTo(5)">⑤</a> <a href="#" onclick="backTo(114)">114</a> <a href="#" onclick="backTo(115)">115</a></span></div>
+      <div class="topic"><span class="zh">风成与交错层理</span><span class="en">eolian · cross-bedding</span><span class="todo">（内容待写）</span><span class="rel"><a href="#" onclick="backTo(9)">⑨</a> <a href="#" onclick="backTo(113)">113</a></span></div>
+      <div class="topic"><span class="zh">黄土（风成粉砂）</span><span class="en">loess</span><span class="todo">（内容待写）</span><span class="rel"><a href="#" onclick="backTo(40)">㊵</a> <a href="#" onclick="backTo(109)">109</a></span></div>
+      <div class="topic"><span class="zh">内陆平原 / 沉积盆地</span><span class="en">sedimentary basin · plain</span><span class="todo">（内容待写）</span><span class="rel"><a href="#" onclick="backTo(143)">143</a></span></div>
+      <div class="topic"><span class="zh">海与沉积档案</span><span class="en">marine archive</span><span class="todo">（内容待写）</span><span class="rel"><a href="#" onclick="backTo(18)">⑱</a></span></div>
+      <div class="topic"><span class="zh">三角洲 / 河口</span><span class="en">delta · estuary</span><span class="todo">（内容待写）</span><span class="rel"><a href="#" onclick="backTo(39)">㊳</a></span></div>
+      <div class="topic"><span class="zh">河流袭夺</span><span class="en">stream piracy</span><span class="todo">（内容待写）</span><span class="rel"><a href="#" onclick="backTo(28)">㉘</a></span></div>
+      <div class="topic"><span class="zh">壶穴（河流旋蚀）</span><span class="en">pothole</span><span class="todo">（内容待写）</span><span class="rel"><a href="#" onclick="backTo(85)">85</a></span></div>
+      <div class="topic"><span class="zh">雅丹（风蚀）</span><span class="en">yardang</span><span class="todo">（内容待写）</span><span class="rel"><a href="#" onclick="backTo(86)">86</a></span></div>
+      <div class="topic"><span class="zh">丹霞（红层陡崖）</span><span class="en">Danxia · red beds</span><span class="todo">（内容待写）</span><span class="rel"><a href="#" onclick="backTo(88)">88</a></span></div>
+      <div class="topic"><span class="zh">盐丘 / 盐构造</span><span class="en">salt dome · diapir</span><span class="todo">（内容待写）</span><span class="rel"><a href="#" onclick="backTo(72)">72</a></span></div>
+    </div>
+
+    <div class="mod">
+      <h3>六、时间怎么读</h3>
+      <div class="topic"><span class="zh">相对 / 绝对年代</span><span class="en">relative / absolute dating</span><span class="todo">（内容待写）</span><span class="rel"><a href="#" onclick="backTo(30)">㉚</a> <a href="#" onclick="backTo(16)">⑯</a> <a href="#" onclick="backTo(100)">100</a></span></div>
+      <div class="topic"><span class="zh">锆石定年</span><span class="en">zircon dating</span><span class="todo">（内容待写）</span><span class="rel"><a href="#" onclick="backTo(16)">⑯</a> <a href="#" onclick="backTo(100)">100</a></span></div>
+      <div class="topic"><span class="zh">深时</span><span class="en">deep time</span><span class="todo">（内容待写）</span><span class="rel"><a href="#" onclick="backTo(15)">⑮</a></span></div>
+      <div class="topic"><span class="zh">最古老岩石（4.03 Ga）</span><span class="en">Acasta gneiss</span><span class="todo">（内容待写）</span><span class="rel"><a href="#" onclick="backTo(73)">73</a></span></div>
+      <div class="topic"><span class="zh">树木年轮 / 气候档案</span><span class="en">dendrochronology</span><span class="todo">（内容待写）</span><span class="rel"><a href="#" onclick="backTo(78)">78</a></span></div>
+    </div>
+
+    <div class="mod">
+      <h3>七、冰的雕刻</h3>
+      <div class="topic"><span class="zh">冰蚀 U 形谷 / 角峰 / 悬谷</span><span class="en">glacial erosion</span><span class="todo">（内容待写）</span><span class="rel"><a href="#" onclick="backTo(10)">⑩</a></span></div>
+      <div class="topic"><span class="zh">冰芯 / 气候档案</span><span class="en">ice core</span><span class="todo">（内容待写）</span><span class="rel"><a href="#" onclick="backTo(29)">㉙</a> <a href="#" onclick="backTo(104)">104</a> <a href="#" onclick="backTo(105)">105</a> <a href="#" onclick="backTo(108)">108</a> <a href="#" onclick="backTo(112)">112</a></span></div>
+      <div class="topic"><span class="zh">雪球地球（赤道冰川）</span><span class="en">Snowball Earth</span><span class="todo">（内容待写）</span><span class="rel"><a href="#" onclick="backTo(69)">69</a></span></div>
+      <div class="topic"><span class="zh">冰臼</span><span class="en">glacial pothole · kettle</span><span class="todo">（内容待写）</span><span class="rel"><a href="#" onclick="backTo(89)">89</a></span></div>
+    </div>
+
+    <div class="mod">
+      <h3>八、石头里的生命与海岸·人的地质</h3>
+      <div class="topic"><span class="zh">化石</span><span class="en">fossil</span><span class="todo">（内容待写）</span><span class="rel"><a href="#" onclick="backTo(12)">⑫</a> <a href="#" onclick="backTo(94)">94</a> <a href="#" onclick="backTo(95)">95</a> <a href="#" onclick="backTo(118)">118</a> <a href="#" onclick="backTo(122)">122</a> <a href="#" onclick="backTo(125)">125</a> <a href="#" onclick="backTo(134)">134</a> <a href="#" onclick="backTo(137)">137</a> <a href="#" onclick="backTo(138)">138</a></span></div>
+      <div class="topic"><span class="zh">微体化石</span><span class="en">microfossil</span><span class="todo">（内容待写）</span><span class="rel"><a href="#" onclick="backTo(18)">⑱</a></span></div>
+      <div class="topic"><span class="zh">海蚀平台</span><span class="en">wave-cut platform</span><span class="todo">（内容待写）</span><span class="rel"><a href="#" onclick="backTo(11)">⑪</a></span></div>
+      <div class="topic"><span class="zh">黄铁矿（愚人金）</span><span class="en">pyrite</span><span class="todo">（内容待写）</span><span class="rel"><a href="#" onclick="backTo(19)">⑲</a></span></div>
+      <div class="topic"><span class="zh">油窗 / 干酪根</span><span class="en">oil window · kerogen</span><span class="todo">（内容待写）</span><span class="rel"><a href="#" onclick="backTo(20)">⑳</a></span></div>
+      <div class="topic"><span class="zh">造山运动</span><span class="en">orogeny</span><span class="todo">（内容待写）</span><span class="rel"><a href="#" onclick="backTo(21)">㉑</a> <a href="#" onclick="backTo(26)">㉖</a></span></div>
+      <div class="topic"><span class="zh">伸展构造 / 盆岭省</span><span class="en">extension · Basin and Range</span><span class="todo">（内容待写）</span><span class="rel"><a href="#" onclick="backTo(24)">㉔</a> <a href="#\" onclick="backTo(145)">145</a></span></div>
+      <div class="topic"><span class="zh">骨料</span><span class="en">aggregate</span><span class="todo">（内容待写）</span><span class="rel"><a href="#" onclick="backTo(13)">⑬</a></span></div>
+      <div class="topic"><span class="zh">承载力</span><span class="en">bearing capacity</span><span class="todo">（内容待写）</span><span class="rel"><a href="#" onclick="backTo(14)">⑭</a></span></div>
+      <div class="topic"><span class="zh">人类世</span><span class="en">Anthropocene</span><span class="todo">（内容待写）</span><span class="rel"><a href="#" onclick="backTo(111)">111</a></span></div>
+    </div>
+
+    <div class="mod">
+      <h3>九、行星与地外（新）</h3>
+      <div class="topic"><span class="zh">星尘 / 元素来源</span><span class="en">stardust · nucleosynthesis</span><span class="todo">（内容待写）</span><span class="rel"><a href="#" onclick="backTo(15)">⑮</a></span></div>
+      <div class="topic"><span class="zh">陨石 / 撞击坑</span><span class="en">meteorite · impact crater</span><span class="todo">（内容待写）</span><span class="rel"><a href="#" onclick="backTo(27)">㉗</a> <a href="#" onclick="backTo(93)">93</a> <a href="#" onclick="backTo(102)">102</a> <a href="#" onclick="backTo(103)">103</a></span></div>
+      <div class="topic"><span class="zh">宜居性</span><span class="en">habitability</span><span class="todo">（内容待写）</span><span class="rel">—</span></div>
+      <div class="topic"><span class="zh">火星陨石</span><span class="en">Martian meteorite</span><span class="todo">（内容待写）</span><span class="rel"><a href="#" onclick="backTo(74)">74</a></span></div>
+      <div class="topic"><span class="zh">白垩末撞击灭绝</span><span class="en">Chicxulub · K-Pg</span><span class="todo">（内容待写）</span><span class="rel"><a href="#" onclick="backTo(70)">70</a> <a href="#" onclick="backTo(101)">101</a> <a href="#" onclick="backTo(103)">103</a></span></div>
+    </div>
+
+    <div class="mod">
+      <h3>十、生命演化（新）</h3>
+      <div class="topic"><span class="zh">微体化石</span><span class="en">microfossil</span><span class="todo">（内容待写）</span><span class="rel"><a href="#" onclick="backTo(18)">⑱</a> <a href="#" onclick="backTo(123)">123</a> <a href="#" onclick="backTo(124)">124</a></span></div>
+      <div class="topic"><span class="zh">大氧化事件</span><span class="en">Great Oxidation Event</span><span class="todo">（内容待写）</span><span class="rel"><a href="#" onclick="backTo(23)">㉓</a> <a href="#" onclick="backTo(92)">92</a></span></div>
+      <div class="topic"><span class="zh">寒武爆发</span><span class="en">Cambrian explosion</span><span class="todo">（内容待写）</span><span class="rel"><a href="#" onclick="backTo(25)">㉕</a> <a href="#" onclick="backTo(118)">118</a> <a href="#" onclick="backTo(119)">119</a> <a href="#" onclick="backTo(120)">120</a> <a href="#" onclick="backTo(121)">121</a> <a href="#" onclick="backTo(122)">122</a></span></div>
+      <div class="topic"><span class="zh">灭绝事件</span><span class="en">mass extinction</span><span class="todo">（内容待写）</span><span class="rel"><a href="#" onclick="backTo(27)">㉗</a> <a href="#" onclick="backTo(31)">㉛</a> <a href="#" onclick="backTo(125)">125</a> <a href="#" onclick="backTo(130)">130</a> <a href="#" onclick="backTo(131)">131</a> <a href="#" onclick="backTo(132)">132</a></span></div>
+      <div class="topic"><span class="zh">三叶虫</span><span class="en">trilobite</span><span class="todo">（内容待写）</span><span class="rel"><a href="#" onclick="backTo(31)">㉛</a> <a href="#" onclick="backTo(116)">116</a> <a href="#" onclick="backTo(117)">117</a></span></div>
+      <div class="topic"><span class="zh">脊椎动物登陆 / 鱼鳍变四肢</span><span class="en">fish-to-tetrapod</span><span class="todo">（内容待写）</span><span class="rel"><a href="#" onclick="backTo(126)">126</a></span></div>
+      <div class="topic"><span class="zh">泛大陆（拼合与裂解）</span><span class="en">Pangaea</span><span class="todo">（内容待写）</span><span class="rel"><a href="#" onclick="backTo(133)">133</a> <a href="#" onclick="backTo(139)">139</a></span></div>
+      <div class="topic"><span class="zh">白垩末大灭绝（撞击）</span><span class="en">K-Pg mass extinction</span><span class="todo">（内容待写）</span><span class="rel"><a href="#" onclick="backTo(70)">70</a></span></div>
+    </div>
+
+    <div class="mod">
+      <h3>十一、灾害与人类（新）</h3>
+      <div class="topic"><span class="zh">地震</span><span class="en">earthquake</span><span class="todo">（内容待写）</span><span class="rel"><a href="#" onclick="backTo(32)">㉜</a></span></div>
+      <div class="topic"><span class="zh">火山喷发 / 热点</span><span class="en">volcanism · hotspot</span><span class="todo">（内容待写）</span><span class="rel"><a href="#" onclick="backTo(33)">㉝</a> <a href="#" onclick="backTo(132)">132</a> <a href="#" onclick="backTo(150)">150</a> <a href="#" onclick="backTo(153)">153</a> <a href="#" onclick="backTo(155)">155</a> <a href="#" onclick="backTo(163)">163</a> <a href="#" onclick="backTo(165)">165</a></span></div>
+      <div class="topic"><span class="zh">板块构造 / 大陆漂移</span><span class="en">plate tectonics · drift</span><span class="todo">（内容待写）</span><span class="rel"><a href="#" onclick="backTo(34)">㉞</a> <a href="#" onclick="backTo(26)">㉖</a> <a href="#" onclick="backTo(98)">98</a> <a href="#" onclick="backTo(128)">128</a> <a href="#" onclick="backTo(129)">129</a> <a href="#" onclick="backTo(133)">133</a> <a href="#" onclick="backTo(139)">139</a> <a href="#" onclick="backTo(142)">142</a> <a href="#" onclick="backTo(144)">144</a> <a href="#" onclick="backTo(146)">146</a> <a href="#" onclick="backTo(148)">148</a> <a href="#" onclick="backTo(149)">149</a> <a href="#" onclick="backTo(154)">154</a> <a href="#" onclick="backTo(156)">156</a> <a href="#" onclick="backTo(157)">157</a> <a href="#" onclick="backTo(158)">158</a> <a href="#" onclick="backTo(160)">160</a> <a href="#" onclick="backTo(161)">161</a> <a href="#" onclick="backTo(162)">162</a> <a href="#" onclick="backTo(164)">164</a></span></div>
+      <div class="topic"><span class="zh">滑坡</span><span class="en">landslide</span><span class="todo">（内容待写）</span><span class="rel"><a href="#" onclick="backTo(65)">65</a></span></div>
+      <div class="topic"><span class="zh">海啸</span><span class="en">tsunami</span><span class="todo">（内容待写）</span><span class="rel"><a href="#" onclick="backTo(77)">77</a></span></div>
+      <div class="topic"><span class="zh">破火山口 / 超级火山</span><span class="en">caldera · supervolcano</span><span class="todo">（内容待写）</span><span class="rel"><a href="#" onclick="backTo(80)">80</a></span></div>
+      <div class="topic"><span class="zh">火山泥流（lahar）</span><span class="en">lahar</span><span class="todo">（内容待写）</span><span class="rel"><a href="#" onclick="backTo(90)">90</a></span></div>
+    </div>
+
+    <div class="mod">
+      <h3>十二、海洋（新）</h3>
+      <div class="topic"><span class="zh">深海沉积档案</span><span class="en">deep-sea archive</span><span class="todo">（内容待写）</span><span class="rel"><a href="#" onclick="backTo(18)">⑱</a> <a href="#" onclick="backTo(106)">106</a></span></div>
+      <div class="topic"><span class="zh">珊瑚礁 / 生物礁</span><span class="en">coral reef</span><span class="todo">（内容待写）</span><span class="rel"><a href="#" onclick="backTo(38)">㊳</a> <a href="#" onclick="backTo(12)">⑫</a> <a href="#" onclick="backTo(136)">136</a></span></div>
+      <div class="topic"><span class="zh">海平面</span><span class="en">sea level</span><span class="todo">（内容待写）</span><span class="rel"><a href="#" onclick="backTo(11)">⑪</a></span></div>
+      <div class="topic"><span class="zh">俯冲带 / 海沟</span><span class="en">subduction · trench</span><span class="todo">（内容待写）</span><span class="rel"><a href="#" onclick="backTo(75)">75</a></span></div>
+      <div class="topic"><span class="zh">浊积岩 / 海底滑坡</span><span class="en">turbidite</span><span class="todo">（内容待写）</span><span class="rel"><a href="#" onclick="backTo(81)">81</a></span></div>
+    </div>
+
+    <div class="mod">
+      <h3>十三、地球内部与板块引擎（新）</h3>
+      <div class="topic"><span class="zh">地球内部分层</span><span class="en">crust · mantle · core</span><span class="todo">（内容待写）</span><span class="rel"><a href="#" onclick="backTo(35)">㉟</a> <a href="#" onclick="backTo(99)">99</a> <a href="#" onclick="backTo(141)">141</a> <a href="#" onclick="backTo(147)">147</a> <a href="#" onclick="backTo(151)">151</a> <a href="#" onclick="backTo(152)">152</a> <a href="#" onclick="backTo(159)">159</a></span></div>
+      <div class="topic"><span class="zh">海底扩张 / 大洋中脊</span><span class="en">seafloor spreading · ridge</span><span class="todo">（内容待写）</span><span class="rel"><a href="#" onclick="backTo(36)">㊱</a> <a href="#" onclick="backTo(34)">㉞</a> <a href="#" onclick="backTo(96)">96</a></span></div>
+      <div class="topic"><span class="zh">地幔对流 / 软流圈</span><span class="en">mantle convection · asthenosphere</span><span class="todo">（内容待写）</span><span class="rel">—</span></div>
+      <div class="topic"><span class="zh">古地磁 / 磁条带</span><span class="en">paleomagnetism · striping</span><span class="todo">（内容待写）</span><span class="rel"><a href="#" onclick="backTo(37)">㊲</a> <a href="#" onclick="backTo(107)">107</a></span></div>
+      <div class="topic"><span class="zh">俯冲带 / 海沟</span><span class="en">subduction · trench</span><span class="todo">（内容待写）</span><span class="rel"><a href="#" onclick="backTo(75)">75</a></span></div>
+    </div>
+
+    <div class="mod">
+      <h3>十四、火山与矿物的石头（新）</h3>
+      <div class="topic"><span class="zh">浮石（能浮的火山岩）</span><span class="en">pumice</span><span class="todo">（内容待写）</span><span class="rel"><a href="#" onclick="backTo(45)">㊺</a></span></div>
+      <div class="topic"><span class="zh">黑曜石（火山玻璃）</span><span class="en">obsidian</span><span class="todo">（内容待写）</span><span class="rel"><a href="#" onclick="backTo(46)">㊻</a></span></div>
+      <div class="topic"><span class="zh">火山弹</span><span class="en">volcanic bomb</span><span class="todo">（内容待写）</span><span class="rel"><a href="#" onclick="backTo(47)">47</a></span></div>
+      <div class="topic"><span class="zh">石英脉 / 水晶</span><span class="en">quartz vein · crystal</span><span class="todo">（内容待写）</span><span class="rel"><a href="#" onclick="backTo(61)">61</a></span></div>
+      <div class="topic"><span class="zh">大理石（重结晶灰岩）</span><span class="en">marble</span><span class="todo">（内容待写）</span><span class="rel"><a href="#" onclick="backTo(59)">59</a></span></div>
+      <div class="topic"><span class="zh">枕状熔岩</span><span class="en">pillow lava</span><span class="todo">（内容待写）</span><span class="rel"><a href="#" onclick="backTo(62)">62</a></span></div>
+      <div class="topic"><span class="zh">磁铁矿 / 罗盘乱转</span><span class="en">magnetite · lodestone</span><span class="todo">（内容待写）</span><span class="rel"><a href="#" onclick="backTo(55)">55</a></span></div>
+      <div class="topic"><span class="zh">砂金（重矿物分选）</span><span class="en">placer gold</span><span class="todo">（内容待写）</span><span class="rel"><a href="#" onclick="backTo(60)">60</a></span></div>
+      <div class="topic"><span class="zh">金伯利岩管 / 钻石</span><span class="en">kimberlite · diamond</span><span class="todo">（内容待写）</span><span class="rel"><a href="#" onclick="backTo(71)">71</a></span></div>
+      <div class="topic"><span class="zh">斑岩铜矿（热液）</span><span class="en">porphyry copper</span><span class="todo">（内容待写）</span><span class="rel"><a href="#" onclick="backTo(76)">76</a></span></div>
+      <div class="topic"><span class="zh">破火山口 / 超级火山</span><span class="en">caldera · supervolcano</span><span class="todo">（内容待写）</span><span class="rel"><a href="#" onclick="backTo(80)">80</a></span></div>
+      <div class="topic"><span class="zh">燧石 / 打火石</span><span class="en">flint · chert</span><span class="todo">（内容待写）</span><span class="rel"><a href="#" onclick="backTo(82)">82</a></span></div>
+      <div class="topic"><span class="zh">石墨（碳的同素异形体）</span><span class="en">graphite</span><span class="todo">（内容待写）</span><span class="rel"><a href="#" onclick="backTo(83)">83</a></span></div>
+      <div class="topic"><span class="zh">火山泥流（lahar）</span><span class="en">lahar</span><span class="todo">（内容待写）</span><span class="rel"><a href="#" onclick="backTo(90)">90</a></span></div>
+    </div>
+
+    <div class="mod">
+      <h3>十五、化石·沉积·海岸现象（新）</h3>
+      <div class="topic"><span class="zh">叠层石（微生物岩）</span><span class="en">stromatolite</span><span class="todo">（内容待写）</span><span class="rel"><a href="#" onclick="backTo(41)">㊶</a> <a href="#" onclick="backTo(92)">92</a></span></div>
+      <div class="topic"><span class="zh">煤（化石森林）</span><span class="en">coal</span><span class="todo">（内容待写）</span><span class="rel"><a href="#" onclick="backTo(42)">㊷</a> <a href="#" onclick="backTo(127)">127</a></span></div>
+      <div class="topic"><span class="zh">硅化木</span><span class="en">petrified wood</span><span class="todo">（内容待写）</span><span class="rel"><a href="#" onclick="backTo(43)">㊸</a></span></div>
+      <div class="topic"><span class="zh">琥珀（树脂化石）</span><span class="en">amber</span><span class="todo">（内容待写）</span><span class="rel"><a href="#" onclick="backTo(44)">㊹</a></span></div>
+      <div class="topic"><span class="zh">恐龙足迹（遗迹化石）</span><span class="en">trace fossil · track</span><span class="todo">（内容待写）</span><span class="rel"><a href="#" onclick="backTo(56)">56</a></span></div>
+      <div class="topic"><span class="zh">菊石 / 头足类</span><span class="en">ammonite · cephalopod</span><span class="todo">（内容待写）</span><span class="rel"><a href="#" onclick="backTo(57)">57</a> <a href="#" onclick="backTo(135)">135</a> <a href="#" onclick="backTo(140)">140</a></span></div>
+      <div class="topic"><span class="zh">泥裂 / 波痕（沉积构造）</span><span class="en">mudcrack · ripple</span><span class="todo">（内容待写）</span><span class="rel"><a href="#" onclick="backTo(50)">50</a> <a href="#" onclick="backTo(51)">51</a></span></div>
+      <div class="topic"><span class="zh">钙华 / 泉华梯田</span><span class="en">travertine · sinter</span><span class="todo">（内容待写）</span><span class="rel"><a href="#" onclick="backTo(49)">㊾</a></span></div>
+      <div class="topic"><span class="zh">沙漠漆</span><span class="en">desert varnish</span><span class="todo">（内容待写）</span><span class="rel"><a href="#" onclick="backTo(53)">53</a></span></div>
+      <div class="topic"><span class="zh">海蚀拱 / 海蚀柱</span><span class="en">sea arch · stack</span><span class="todo">（内容待写）</span><span class="rel"><a href="#" onclick="backTo(52)">52</a></span></div>
+      <div class="topic"><span class="zh">盐湖 / 粉红湖（蒸发岩）</span><span class="en">saline lake · halite</span><span class="todo">（内容待写）</span><span class="rel"><a href="#" onclick="backTo(54)">54</a></span></div>
+    </div>
+
+    <div class="mod">
+      <h3>十六、冰·土·灾害·深海（新）</h3>
+      <div class="topic"><span class="zh">冰碛漂砾</span><span class="en">glacial erratic</span><span class="todo">（内容待写）</span><span class="rel"><a href="#" onclick="backTo(63)">63</a></span></div>
+      <div class="topic"><span class="zh">冰川擦痕 / 羊背石</span><span class="en">glacial striae · roche moutonnée</span><span class="todo">（内容待写）</span><span class="rel"><a href="#" onclick="backTo(64)">64</a></span></div>
+      <div class="topic"><span class="zh">土壤剖面</span><span class="en">soil profile</span><span class="todo">（内容待写）</span><span class="rel"><a href="#" onclick="backTo(66)">66</a></span></div>
+      <div class="topic"><span class="zh">滑坡</span><span class="en">landslide</span><span class="todo">（内容待写）</span><span class="rel"><a href="#" onclick="backTo(65)">65</a></span></div>
+      <div class="topic"><span class="zh">间歇泉 / 地热</span><span class="en">geyser · hydrothermal</span><span class="todo">（内容待写）</span><span class="rel"><a href="#" onclick="backTo(48)">㊽</a></span></div>
+      <div class="topic"><span class="zh">黑烟囱（热液喷口）</span><span class="en">black smoker · vent</span><span class="todo">（内容待写）</span><span class="rel"><a href="#" onclick="backTo(67)">67</a> <a href="#" onclick="backTo(110)">110</a></span></div>
+      <div class="topic"><span class="zh">可燃冰（甲烷水合物）</span><span class="en">methane hydrate</span><span class="todo">（内容待写）</span><span class="rel"><a href="#" onclick="backTo(68)">68</a></span></div>
+      <div class="topic"><span class="zh">陨石（手持来客）</span><span class="en">meteorite · in hand</span><span class="todo">（内容待写）</span><span class="rel"><a href="#" onclick="backTo(58)">58</a></span></div>
+    </div>
+
+  </div>
+</div>
+
+<div class="foot">两条路线：信息流（默认，随便翻）= 野外观感；目录 = 背后的地质框架（逐步填）。笔记会越写越多。</div>
+
+<script>
+  var notes = [
+    { id:1, place:"小区门口，等红灯", ph:"蹲着拍的路牙石侧面，标出水平层纹",
+      t:["蹲下来系鞋带，顺手看了眼脚边的路牙石。侧面一道一道的纹，跟千层糕似的。我以前一直当石头就是一整块硬疙瘩，从没想过它也有“层数”。",
+         "后来才知道，这叫<b>层理</b>（bedding）——早先这儿是河或者湖，沙子泥一层层沉底，压了不知多少年变成石头，那些纹就是当年一层层的印子。脚底下踩的，原来是老底子的河湖，是种<b>沉积岩</b>。之前从没往这上面想过。"] },
+    { id:2, place:"郊外河边", ph:"左：山上尖石头 / 右：河滩圆石头",
+      t:["捡了块石头，圆滚滚的，攥手里舒服。可山上刚崩下来的石头明明棱角很利，能划手。一样的石头，怎么到河边就圆了？",
+         "应该是水推着它一路滚，跟别的石头磕磕碰碰，尖的地方先磨没——这叫<b>磨圆度</b>（roundness），搬得越远越圆。听人说小刀划得动的是软石头（<b>莫氏硬度</b>里方解石才 3，小刀约 5.5），划不动的多半含石英（7）。这块估计走了挺远的路。看了会儿，又扔回水里了。"] },
+    { id:3, place:"商场门口，坐着歇脚", ph:"地坪石特写，标出肉红/白/黑三色颗粒",
+      t:["盯着脚下的地坪石发呆。这石头里头有肉红的、白的、黑的三色亮晶晶小颗粒，拼在一起。有人说这叫<b>花岗岩</b>，是<b>火成岩</b>——地底下岩浆慢慢凉下来，晶体一颗颗长大，所以能看清颗粒（显晶质）。",
+         "黑的那部分好像最容易先风化出小坑。这跟<b>盐风化</b>有关：海边或干旱处，盐分渗进石头孔隙里结晶、膨胀，把表面撑出坑，地质上叫 <b>tafoni</b>（蜂巢坑）。也没深究，不过脚底下这块地，仔细看还挺有意思的。"] },
+    { id:4, place:"海边", ph:"黑石头断口 + 六棱柱石柱",
+      t:["有块黑石头，敲开亮得像玻璃，断口一圈圈的像贝壳。当地人说叫<b>玄武岩</b>，也是火成岩，但跟花岗岩反过来——它是岩浆冒到地面上“秒冻”的，冷太快长不出晶体，所以又黑又玻璃感。",
+         "旁边还有整排六棱的石柱子，叫<b>柱状节理</b>（columnar jointing），是岩浆岩凉的时候自己均匀裂成的。我不太懂，但站那儿看了好久。"] },
+
+    { id:5, place:"郊外河边，看地图", ph:"航拍/地图上的大弯道，标凹岸、凸岸、牛轭湖",
+      t:["看着河弯来弯去，一直想它为啥不直着走。后来才懂，水转弯时外圈冲得猛，把岸往里啃（这叫<b>凹岸侵蚀</b>，啃出的陡坎叫 cut bank）；内圈水慢，沙子石头就沉积下来（<b>凸岸堆积</b>，堆出个 point bar）。这么一啃一堆，弯就越来越勒。",
+         "弯勒得太紧，两头几乎贴上，发大水时一下冲断“脖子”，河抄近道走了，丢下个弯月形的死水——<b>牛轭湖</b>（oxbow）。密西西比河就爱干这个，一截弯能一下子少掉几十公里。这弯是水自己慢慢画出来的。"] },
+    { id:6, place:"山间公路边，峡谷", ph:"峡谷边多层台阶状平台，标阶面与阶崖",
+      t:["走山道看见河谷边上一层层像台阶的平地，老的庄稼地悬在半空。这叫<b>河流阶地</b>（river terrace）——河床往下切，旧河床就被撂在高处，成了台阶。",
+         "为啥切？地壳往上抬、或者海平面降，河就得往下找新平衡；切一刀留一级，切几刀就成楼梯。越高那级越老。张家界、科罗拉多大峡谷那一层层，好多就是这么来的。"] },
+    { id:7, place:"溶洞里", ph:"溶洞顶垂下的钟乳石与地面石笋，标水滴路径",
+      t:["进溶洞看钟乳石挂着、石笋立着。原理其实挺生活：雨水落在土里，吸了二氧化碳变成弱酸（<b>碳酸</b>），渗进<b>石灰岩</b>，把石头溶出钙带进洞；洞里二氧化碳跑掉，钙又沉淀，一滴一滴挂下来就成了钟乳石。这套叫<b>喀斯特</b>（karst）。",
+         "慢得离谱——一年才长零点零几毫米。一根一米的钟乳石，得几万到十万年。所以别碰，碰断的是几万年。"] },
+    { id:8, place:"路上看远山", ph:"远处尖峰林与近处圆缓山丘对比",
+      t:["远看一座山，有的尖得像牙，有的圆乎乎。不是长得不一样，是石头<b>抗风化</b>的脾气不同。石英砂岩硬，站着不肯倒，就立成尖峰（桂林、张家界的峰林就是）；松软的土山早被雨和河削平了。",
+         "同一片地里，石头性格决定山的脸。这叫<b>差异风化</b>——硬的地方留，软的地方先没。"] },
+    { id:9, place:"沙漠 / 海边沙丘", ph:"沙丘斜向层理特写，标迎风/背风面",
+      t:["沙丘背风面一道道斜纹，风把沙从脊上滑下来，斜着一层层堆。这斜纹若被埋住、压成石头，地质图上就叫<b>交错层理</b>（cross-bedding）——认得出是风（或水）从前从哪边吹、哪边流。",
+         "所以沙漠不只现在是沙，几亿年前的沙丘，也能在石头里找到它当时的斜纹。叫<b>风成沉积</b>。"] },
+    { id:10, place:"山里 / 纪录片", ph:"U 形谷与相邻悬谷、角峰示意图",
+      t:["山里那种宽宽平平、两壁笔直的谷，和河边窄深的 V 谷不一样。河啃的是一条线，冰连底带帮一起啃宽，就成了 <b>U 形谷</b>。冰有两手：拔石头（<b>冰劈 / plucking</b>）和当砂纸磨（<b>磨蚀 / abrasion</b>）。",
+         "退了以后，支流的谷还悬在半空，叫<b>悬谷</b>；几面冰各啃一个碗，中间剩个尖，就是<b>角峰</b>——马特洪峰那个尖就是。石头上还有冰划的平行擦痕。"] },
+    { id:11, place:"海边", ph:"退潮露出的海蚀平台，标不同高度级",
+      t:["海边浪一直拍崖脚，把岸拍出一片平的平台，退潮露出来。海平面升升降降，平台就一级级留在不同高度，像海岸的大台阶。这叫<b>海蚀平台</b>（wave-cut platform）。",
+         "它记着古时候海在哪儿——哪级平台，就约等于那时候的海平面。是地球写的海平面日记。"] },
+    { id:12, place:"山上石灰岩", ph:"石灰岩断面上的贝壳/珊瑚化石印痕",
+      t:["山上石灰岩里常嵌着贝壳、珊瑚的碎印。这石头本来就是海底的壳和泥，一层层压了千万年变成的。所以石头里的“贝壳”不是装饰，是<b>化石</b>（fossil）。",
+         "它像地球留的收据：这儿曾经是大海。看一眼石头里的壳，就知道脚下这片地，古时候在海底。"] },
+    { id:13, place:"工地 / 路边", ph:"混凝土断面里的砂与碎石骨料",
+      t:["工地拌混凝土，里头那些砂和石子叫<b>骨料</b>（aggregate）。砂大多是从河里挖的河沙，石子是山上炸下来的碎石。",
+         "说白了，我们住的楼、走的路，底子是地质搬了千万年的碎屑，被人重新搅在一起。石头没消失，只是换了工种。"] },
+    { id:14, place:"工地", ph:"工地打桩现场，标软土层与深处硬层",
+      t:["看工地打桩，一根根往地里锤。因为有些地软——淤泥、填土，楼压上去会慢慢陷。打桩是把楼的重量穿过软层，传到深处的硬底。",
+         "这叫地基<b>承载力</b>（bearing capacity）。桩打多深，全看地下那层“脾气”够不够硬。脚下的地，不是都一个样。"] },
+
+    { id:15, place:"海边捡石头，发呆", ph:"示意图：氢来自大爆炸，重元素来自恒星核合成与超新星",
+      t:["手里的石头，绝大部分原子都不是地球生的。氢和一点点氦是 138 亿年前大爆炸直接炸出来的；可石头里那些硅、铁、钙、氧——几乎全是在恒星肚子里，靠核聚变一点点攒出来的。大质量恒星临死前炸成超新星，把这些元素撒回太空，后来才聚成了太阳、地球，还有我手里的这块。",
+         "也就是说，这块石头的年纪比地球还老——它的原子是别处、别时代的星星给的。我身上的铁，和这块石头里的铁，同源。这个念头挺重的。（出处：Zalasiewicz《The Planet in a Pebble》开篇）"] },
+
+    { id:16, place:"看书，想到澳洲那片荒原", ph:"Jack Hills 锆石晶体显微照，标 4.4 Ga",
+      t:["有种矿物叫<b>锆石</b>（zircon，硅酸锆）。它硬、稳，被磨碎、被加热、被压进新石头里几十亿年，原先的化学成分都还在。地质学家就靠它里面的放射性铀慢慢变成铅，算出年龄。",
+         "澳洲西部 Jack Hills 一片荒原里，找到过一颗 44 亿年前的锆石——地球自己也才 45.6 亿岁，这颗晶体只比地球晚约 1.6 亿年，却嵌在 30 亿年前的沙滩石头里。也就是说，你能在 30 亿年前的海滩沙子里，找到比那片海滩还老十亿年的碎渣。地球最早的那层壳几乎被磨光了，就靠这种小晶体留了点口供。"] },
+
+    { id:17, place:"威尔士海边，攥着一块板岩卵石", ph:"板岩薄片，标板理 cleavage 与原始层理",
+      t:["Zalasiewicz 捡的那块，就是威尔士的<b>板岩</b>（slate）。它原本是四五亿年前沉在古大洋（Iapetus 洋）底的泥——泥岩、粉砂岩。后来大陆撞大陆，把这些泥狠狠挤了一下：没熔化，但高温高压让矿物重新结晶，泥岩长出一片能顺纹理劈成薄片的“板理”（cleavage）。这就是<b>变质作用</b>（metamorphism）——不动火，靠压。",
+         "所以“石头从哪来”不止火成和沉积。被地球挤过、改写过的，叫变质岩。脚下这片板岩，是远古海洋被造山运动摁成了薄片。手感凉，来历烫。"] },
+
+    { id:18, place:"海边，想石头来时的路", ph:"剖面：陆源碎屑入海 → 深海沉积 → 封存微体化石",
+      t:["书里追那条线：石头碎成沙，被河搬进海，沉到看不见的深水。深海沉积物像一层层慢动作录像——每一层都夹着当时活过的微小生命：浮游的、底栖的，死后沉下来变成<b>微体化石</b>（microfossil）。",
+         "海是地球最耐心的大档案馆。它不说话，但把每一代生命的残骸、每一阵洋流的化学，都按年份摞好。我们这块石头，早年在海底躺了很久，身上其实录着那片早已消失的海洋。"] },
+
+    { id:19, place:"石头摊，看到亮黄小块", ph:"黄铁矿立方晶体特写 vs 真金",
+      t:["有回在石头堆里看到亮晶晶的金黄色小块，以为是金。其实是<b>黄铁矿</b>（pyrite），外号“愚人金”。它含铁和硫，在石头沉积时特定的化学环境里结晶出来——缺氧、富硫的烂泥里最易长。",
+         "书里专有一章讲它。真金软、密度大、用牙咬会留印；黄铁矿硬、脆、一敲就碎成方块。地质学家靠这点不花眼。但黄铁矿也老实：它记着当年海底是死是活、是氧是硫，是个化学见证人。"] },
+
+    { id:20, place:"加油站，忽然想到油从哪来", ph:"埋深-温度曲线：干酪根 → 油窗 → 气",
+      t:["石头里那些远古生物的残骸，没变成化石的，就烂在泥里成了<b>干酪根</b>（kerogen）。埋得够深、地温刚好（大概 60–150°C 那一截），干酪根就裂解成油；再热一点，全变气；不够热，就还是干酪根。这段“恰到好处”的温度区间，地质上叫<b>油窗</b>（oil window）。",
+         "所以油箱里的油，本质是几亿年前大海里浮游生物的尸体，被压了很久闷出来的。我们烧的，是封在石头里的古生命。这想法一时有点接不住。"] },
+
+    { id:21, place:"看远山，想它怎么起来的", ph:"大陆碰撞 → 沉积岩褶皱抬升示意图",
+      t:["我们那块板岩，后来被一桩大事改变了命运：<b>造山运动</b>。四五亿年前，叫 Avalonia 的小陆块撞上北美那块（Laurentia），这一撞就是<b>加里东造山</b>（Caledonian Orogeny），把当年威尔士脚下的海底泥沙，褶皱着抬成了山。",
+         "山不是凭空长出来的，是地球把海底摁起来、折起来。雪墩山（Snowdonia）那一片，达尔文 1831 年去过，他在山上看到带海贝壳的石头，才恍然：这片高地，曾经在海里。山是海的底，被翻了上来。"] },
+
+    { id:22, place:"海边，卵石被浪推着", ph:"完整岩石循环：岩浆 → 沉积 → 变质 → 抬升 → 风化 → 卵石",
+      t:["绕了一大圈。石头被造成、被埋、被抬成山，最后还是被<b>风化</b>和侵蚀一点点松开，碎成砂、滚成卵石，被浪推回海边——又被谁捡起来。书最后一章叫“Futures”，讲这块石头接下来还会继续走：被磨碎、被冲走、再沉、再变、再回来。",
+         "整个地球就是这么个不停转的循环。我手里的不是一块静止的石头，是一段还没走完的路程，中途停在我掌心歇脚。（出处：Zalasiewicz《The Planet in a Pebble》）"] },
+
+    { id:23, place:"看铁锈，想到大气的第一次呼吸", ph:"条带状铁建造（BIF）剖面，标铁层与硅层交替；大气氧曲线在 24 亿年处陡升",
+      t:["地球前大半段，大气里几乎没有自由氧。铁在海里是溶着的，安安静静。直到一种东西出现——蓝细菌，会光合作用，把水拆开、把氧当废物放出来。大约 24 亿年前，氧开始多到压不住，这叫<b>大氧化事件</b>（Great Oxidation Event，约 24–20 亿年前）。",
+         "氧一出来，先不进大气，全被海里的铁‘吃了’——铁遇氧变锈，沉成一层层红黑色的<b>条带状铁建造</b>（BIF），今天澳洲、巴西的富铁矿好多就是那会儿的‘氧账单’。等海里的铁耗光了，氧才在大气里攒起来。这一下改写了整个地球化学，也差点把当时大多数生命憋死——氧，是地球第一次‘呼吸’，代价不小。（出处：Hazen《The Story of Earth》）"] },
+
+    { id:24, place:"开车穿过内华达，两边山中间谷", ph:"盆岭省示意图：地垒(horst)与地堑(graben)交替，地壳被拉成百叶窗",
+      t:["美国西部内华达到犹他那片，不是一条山脉，是一排排‘山—谷—山—谷’平行摆开，像有人把地壳拉成了百叶窗。这叫<b>盆地山脉省</b>（Basin and Range）。",
+         "机理是<b>伸展</b>：地壳被东西向拉开，不是挤，是拽。拉到一定程度，地块沿断层一块翘起来（<b>地垒</b> horst），一块沉下去（<b>地堑</b> graben），一排排错开。这拉伸从约 1700–2000 万年前开始，地壳在这儿被拉长了差不多一倍。山是被拽出来的，不是撞出来的。McPhee 写这片写得极好（《Basin and Range》）。"] },
+
+    { id:25, place:"看化石图册，寒武的怪鱼", ph:"伯吉斯页岩生物群复原：Pikaia、Opabinia(五眼)、Anomalocaris、Hallucigenia",
+      t:["1909 年，地质学家 Walcott 在加拿大 Yoho 国家公园的伯吉斯页岩里，挖到一堆 5.08 亿年前（中寒武）的怪物：有长五只眼、像喇叭吸管的 <b>Opabinia</b>；有挥着大爪的顶级捕食者 <b>Anomalocaris</b>；有浑身刺、不知正反的 <b>Hallucigenia</b>；还有一条小小的 <b>Pikaia</b>，被认为是最早的脊索动物——咱们的远祖。",
+         "最绝的是它把<b>软体</b>也保存了下来——脑子、肠子、神经，平时化石留不下。这堆‘硬核写真’让古生物学家看傻了：寒武爆发那会儿，生命像突然把所有可能的造型都试了一遍。Gould 在《Wonderful Life》里说，要是重播一遍地球史，今天活着的未必是我们。（出处：Gould《Wonderful Life》1989）"] },
+
+    { id:26, place:"看珠峰照片，想脚下踩过什么", ph:"印度板块向北挤入欧亚，喜马拉雅剖面，特提斯洋闭合",
+      t:["珠峰每年还在长高，大概一厘米——比指甲长得慢，但没停。原因是印度板块还在往北死命挤欧亚板块。这场<b>印度—欧亚碰撞</b>约 4000–5000 万年前开撞，把当年夹在中间的<b>特提斯洋</b>整个挤没了，海底的沉积物被摁上去、叠成世界屋脊。",
+         "有意思的是，喜马拉雅的石头像只‘黑匣子’：高压变质带把当年俯冲、碰撞的温度压力都录了下来。珠峰顶上的石灰岩里还带着远古海洋的化石——山顶曾是海底。山还在长，因为它背后那股挤劲儿还没泄。（出处：相关造山研究）"] },
+
+    { id:27, place:"看亚利桑那那个大坑", ph:"巴林杰陨石坑航拍（圆形坑+隆起边），标冲击石英",
+      t:["亚利桑那沙漠里有个直径约 1.2 公里的圆形大坑——<b>巴林杰陨石坑</b>（Meteor Crater）。约 5 万年前，一颗约 50 米宽的<b>铁陨石</b>（Canyon Diablo 陨石）以几十公里每秒砸下来，瞬间释放的能量顶几百颗核弹，把地层像泥巴一样掀飞。",
+         "判定‘这是撞出来的’有个铁证：坑边石头里有<b>冲击石英</b>——石英被极高压瞬间压成了柯石英、斯石英这种平时只在地幔才有的变体。普通火山、地震压不出这个。后来 Alvarez 父子靠‘撞击’解释恐龙灭绝（K-Pg 事件），灵感源头之一就是这种坑。地球被砸过，不止一次。（出处：Alvarez《T. rex and the Crater of Doom》）"] },
+
+    { id:28, place:"看分水岭，想水怎么改主意", ph:"河流袭夺示意：抢水河切穿分水岭，被抢河留下风口(wind gap)",
+      t:["两条河原本各走各的，中间隔着个分水岭。可有一条河地势更陡、下切更狠，慢慢把分水岭‘咬’穿了，抢走了另一条河的上游——这叫<b>河流袭夺</b>（stream piracy）。被抢的那条，上游突然没了水，只剩一个干涸的鞍部，叫<b>风口</b>（wind gap），像个被抽干的水槽。",
+         "Montgomery 在《The Rocks Don't Lie》里讲，河流下切多快、土壤怎么被带走，和这种‘抢水’关系很大——分水岭是会移动的，今天你喝的河，可能昨天还属于另一条。水也会‘偷’。（出处：Montgomery《The Rocks Don't Lie》）"] },
+
+    { id:29, place:"看格陵兰冰芯照片，想到时间也能钻出来", ph:"冰芯年层示意：夏冬明暗交替层，封存气泡；两英里长的冰柱",
+      t:["格陵兰的冰，一年一年往下摞，从不化。最上面是刚落的雪，越往下越老，压实成冰。钻机往下打了差不多两英里（3000 多米），把整根‘冰柱’提上来——这就是 Alley 那本书叫的<b>两英里时光机</b>。",
+         "每一层冰都记着当年的温度、沙尘、火山灰，甚至封着当年的空气小气泡。看明暗交替的层，像数年轮一样能数出年份；氧同位素还能读出那会儿有多冷。冰里写着最近十几万年的气候史，包括忽冷忽热、十年内骤变 15℃ 的‘新仙女木’事件。地球翻脸，比我们想得快。（出处：Alley《The Two-Mile Time Machine》）"] },
+
+    { id:30, place:"看一张旧地质图，颜色摞出来的地下", ph:"1815 史密斯英格兰地质图，彩色标岩层；同一岩层含相同化石",
+      t:["有个自学成才的英国测量员威廉·史密斯，干了一件改变地质学的事。他发现：哪一层石头，就对应哪一群化石——同一层到处都长一样的贝壳菊石。这叫<b>化石层序律</b>（faunal succession）：化石是地层的‘身份证’，靠它能把乱七八糟的岩层按老幼排好队。",
+         "1815 年他画出第一张大区域地质图（英格兰和威尔士），用颜色把地下的岩层摞到一张纸上。代价是穷到坐牢——图卖不动，还被人抄。可这张‘改变世界的地图’奠定了地层学。今天你翻任何地质图，底色逻辑都是他定的。（出处：Winchester《The Map That Changed the World》）"] },
+
+    { id:31, place:"石头摊上捡到一块三叶虫，数它的节", ph:"三叶虫复原：头甲/胸节/尾甲，三叶分节，复眼由方解石构成",
+      t:["捡到一块三叶虫化石，Fortey 说它‘有的扎得像刺猬，有的光得像煮蛋；大的比龙虾大，小的比蚊子小’。它活在寒武到二叠末，绵延两亿多年，是地球上最成功的早期动物之一。身体就一套蓝图：头甲、一串会弯的胸节、尾甲，横看还分三瓣（所以叫‘三叶’）。",
+         "最绝的是它的眼睛——晶体是<b>方解石</b>长的，硬邦邦还能成像，有的种类还做了‘笛卡尔双透镜’消像差，几亿年后才被人重新发明。它和鲎是远亲。它最后在二叠末那场大灭绝里退场，但留下的化石成了地质学最准的‘指相化石’——有它，就能定地层年纪。（出处：Fortey《Trilobite! Eyewitness to Evolution》）"] },
+
+    { id:32, place:"站在圣安地列斯断层边，想地怎么攒劲", ph:"弹性回跳示意：篱笆被断层慢慢扭成 S，震时回弹错位",
+      t:["1906 年旧金山大地震后，有个叫 Reid 的地质学家看懂了地怎么动：断层两边的板块平时像橡皮筋一样被慢慢拽着攒劲（太平洋板块往西北蹭），地表的篱笆被扭成 S 形；攒到顶不住，‘啪’地滑回去，错位几米——这就是<b>弹性回跳</b>。",
+         "所以地震不是凭空炸，是断层把几十年、几百年的应力一下放了。震完，橡皮筋又重新开始攒下一回。圣安地列斯那次，断层裂了 430 公里，错动最多 6 米。我们脚下的地，一直在悄悄拧着劲。"] },
+
+    { id:33, place:"看夏威夷群岛排列，像传送带上的产品", ph:"太平洋板块 NW 移动，越过固定热点，串成年龄递增的岛链；Loihi 在建下一座",
+      t:["夏威夷孤零零漂在太平洋正当中，四面离大陆几千公里，又不在板块边界上，凭什么冒火山？答案是地底有个不动的<b>热点</b>（mantle plume，地幔柱）——一股异常热的岩浆从地幔深处一路顶上来，烧穿上方慢慢西北移动的太平洋板块。",
+         "板块像传送带，热点像固定喷头：老岛被带走、熄火、被蚀没，新岛在原地长出来。于是群岛排成一条‘年龄递增’的线——西北的考艾岛约 550 万年，东南的大岛还不到 70 万年，基拉韦厄至今在喷。东南方海底还有座 Loihi 正在长，几万年后会冒出海面，成为下一座夏威夷岛。"] },
+
+    { id:34, place:"看世界地图，南美东岸对非洲西岸", ph:"魏格纳拼图：各大陆能严丝合缝对上；泛大陆 Pangaea 裂解漂移",
+      t:["把南美东岸和非洲西岸往一块拼，能严丝合缝对上——魏格纳 1912 年就是被这勾起的念头。他主张：很久以前所有大陆是一整块，叫<b>泛大陆</b>（Pangaea），后来裂开、漂走。证据很硬：同一种淡水爬行动物（中龙）的化石，只出现在南美和南非；舌羊齿植物化石散在五大洲；二叠纪冰川擦痕跨洲能对上。",
+         "当时同行笑他‘地学诗歌’——因为他说不清是什么力推得动大陆。直到 1960 年代，人们发现海底在大洋中脊不断新生、向两侧推开（<b>海底扩张</b>），才明白大陆是‘坐’在板块上被带着走。魏格纳 1930 年冻死在格陵兰，没等到平反。但他是对的。"] },
+
+    { id:35, place:"想到脚下不是实心，是几层套娃", ph:"地球剖面：地壳/地幔/外核(液)/内核(固)，标莫霍面、古登堡面、莱曼面",
+      t:["我们脚下不是一整块实心球。地震波是探地的手电——它走到不同深度会变速、拐弯，甚至‘断了’，于是暴露出几道界面。最浅那道在地下约 30–70 公里，叫<b>莫霍面</b>，是地壳和地幔的分界；往下 2900 公里是<b>古登堡面</b>，地幔到此结束，下面是地核。",
+         "关键线索是：S 波（横波）穿不过液体。古登堡面以下 S 波整个消失，说明外核是液态铁镍；可再往下到 5100 公里（<b>莱曼面</b>，丹麦女科学家 Lehmann 1936 年发现），S 波又回来了——内核是固态。所以我们站在一层薄壳上，底下是慢慢流的地幔，外头裹着液态铁海，最里头是个固态铁球。地球是颗‘套娃’。" ] },
+
+    { id:36, place:"看海底地图，那条绕地球的中脊", ph:"大洋中脊系统绕全球 65000km，新洋壳从脊轴涌出向两侧推开",
+      t:["海底不是平的死地。它有一条绕遍所有大洋的‘缝’，总长约 6.5 万公里，叫<b>大洋中脊</b>——是地球最大的地貌。岩浆从这‘缝’里不断涌出、冷却成新洋壳，再像两条传送带往两边推开，把上面的板块（连同大陆）一起带走。这叫<b>海底扩张</b>（Hess 1962 年提出，自称‘地学诗歌’）。",
+         "这补上了魏格纳缺的‘发动机’：大陆不用自己犁过海底，是坐船走的。推论很干脆——洋壳越靠中脊越年轻，离得越远越老，最老也不过约 2 亿年（更老的都回炉进地幔了）；而大陆太轻沉不下去，能留 40 亿年的老石头。海洋是会‘呼吸’的。" ] },
+
+    { id:37, place:"想海底像磁带，录着地球翻跟头", ph:"洋中脊两侧对称的磁异常条带，对应地磁极性倒转序列",
+      t:["地球磁场不是一直指北的——它时不时整个翻面（南北极对调），叫<b>地磁倒转</b>。新洋壳在洋中脊冷却时，里头含铁的矿物就把当时的磁场方向‘冻’了进去。于是海底被一道道正、反磁化的条带像斑马线一样记录下来，而且中脊两侧完全对称。",
+         "1963 年 Vine 和 Matthews 看穿了这招：海底就是地球的‘磁带录音机’，条带的宽窄对应倒转历史的快慢。对着已知倒转年表一比对，就能算出板块每年挪几厘米。这是海底扩张最硬的证据——地球自己写了日记，还左右对称地写了两份。" ] },
+
+    { id:38, place:"潜水，摸到一丛珊瑚，想到它其实是石头", ph:"珊瑚虫分泌碳酸钙骨架，虫黄藻共生供能，大堡礁 2300km",
+      t:["潜水摸到珊瑚，它看着像植物、像石头，其实是动物——成千上万个叫<b>珊瑚虫</b>的小东西，每个分泌一个碳酸钙小杯（文石）把自己住进去。老的死了，新的一层长在上头，几千年几万年叠出礁体。活珊瑚只是薄薄一层表皮，里头全是死骨架压成的石灰岩。",
+         "它能在‘海里沙漠’（热带清水其实贫营养）里盖大楼，靠的是和<b>虫黄藻</b>的共生：藻类住在虫体里做光合作用，把九成能量交给珊瑚，珊瑚才够力气快速造骨。大堡礁 2300 公里长、从太空看得见，是比手指甲还小的动物耗了约两万年（这版）到两千万年攒出来的。地球最慢也最壮观的建筑工程。" ] },
+
+    { id:39, place:"看卫星图，河入海处摊开的扇形", ph:"河流入海减速，泥沙分叉堆积成三角洲（如尼罗河、密西西比）",
+      t:["河奔到海边或湖口，地势一平、水一慢，再也搬不动沙子泥巴，就一股脑卸下来。泥沙在河口摊开、分叉成一条条汊道，堆出扇形的陆地——这叫<b>三角洲</b>（因为形状像希腊字母 Δ）。尼罗河、密西西比河都是经典款。",
+         "三角洲是‘赠送的新地’：河流把自己的搬运成果在终点办了场展览。但它也最‘短命’——海面升降、河流改道、泥沙不够，都会让它长了又退。我们很多大都市就坐在这种河口的礼物上，脚下是几千年堆的细软。" ] },
+
+    { id:40, place:"站黄土高原上，捧一把会扬起的细粉", ph:"黄土风成粉砂，冰期干冷风从荒漠吹来堆积（如黄土高原、密西西比谷）",
+      t:["黄土高原那把土，颗粒均匀、松得能扬起来，是风一趟趟搬来的。冰期时，干冷的大风把中亚、戈壁甚至远处的粉砂卷起，落到稍湿润处沉降堆积，反复几十万年，攒成几十上百米厚的<b>黄土</b>（loess）。它的矿物还记着源头的样子。",
+         "美国和欧洲也有黄土（比如密西西比河谷），都是冰期‘风送快递’的收据。所以‘风吹来的土’能把千里外的荒漠和脚下的高原连成一条搬运线——和海边的沙、河里的泥一样，都是地球在搬家的证据。和⑨那阵风成沙丘，是同一位快递员。" ] },
+
+    { id:41, place:"澳洲鲨鱼湾，踩着栈道看水底一堆‘石头菜花’", ph:"Hamelin Pool 叠层石：暗色圆顶状微生物岩，分层",
+      t:["在鲨鱼湾一处咸得发苦的水湾，水底蹲着一堆堆暗色的圆疙瘩，远看像烂掉的菜花，近看是石头。这叫<b>叠层石</b>（stromatolite）——不是石头自己长，是一层黏糊糊的<b>蓝细菌</b>（藻类的一种）席子，慢慢把泥沙和钙裹住、一层层摞起来的。活的那层只在最顶上薄薄一口，底下全是死了千万年的老席子压成的石灰岩。",
+         "最瘆人的是：今天这些细菌的模样，和 35 亿年前的化石几乎一模一样——那是地球最早的光合作用生命。它们靠晒太阳吐氧，几十亿年慢慢把大气从‘几乎没氧’灌到‘够动物活’。所以脚底这堆‘菜花’，是地球上最老、还在营业的活物。长一米高要两三千年，慢得不像话。" ] },
+
+    { id:42, place:"小时候老家烧过一种黑石头，后来才知道那是煤", ph:"煤层：黑亮层理，夹植物化石碎片",
+      t:["老家冬天烧过一种黑石头，敲开有光泽的层理，偶尔还夹着一片叶子的印子。那就是<b>煤</b>。它根本不是‘石头’，是几亿年前大片沼泽森林，树倒在水里泡着、被泥埋了，厌氧不烂，后来高温高压把纤维素慢慢改成了碳。手里这块黑疙瘩，前身是一棵树的尸体。",
+         "石炭纪（约 3 亿年前）那会儿地球到处是这种巨型蕨类沼泽，攒下的煤我们烧了几百年。烧煤，本质是烧封在石头里的古森林。挖煤的矿工常说‘煤是太阳的存款’——倒也没错，那碳本来就是远古光合作用存下的。" ] },
+
+    { id:43, place:"美国亚利桑那，荒原上横着一截截彩色的‘木头’", ph:"石化木：树干纹理清晰，红黄紫的石英填充",
+      t:["亚利桑那东北部那片荒原，地上横着一截截木头，可敲上去是石头，还透着红黄紫的光。这是<b>硅化木</b>——2.25 亿年前（三叠纪）的一片高大松柏林，树倒了被泥沙埋住、隔绝了空气，含硅的地下水（来自火山灰）慢慢渗进木头，把每一个细胞腔填成石英，一细胞一细胞地把木头换成了玉化的石头。",
+         "最绝的是年轮、树皮、甚至虫蛀的缝都还在——石头里能数出当年这棵树的年纪。Navajo 人以前管这些叫‘巨兽的骨头’。如今法律规定不能捡走，得让它留在原地继续晒。" ] },
+
+    { id:44, place:"首饰盒里一块金色的‘冻’，里头有只小虫子", ph:"琥珀：金黄色树脂化石，封着昆虫/植物",
+      t:["见过一块金红色的‘冻’，对着光能看到里头一只小蚂蚁，腿还清楚。那是<b>琥珀</b>——远古树木流的树脂，恰好把路过的小虫、花粉、一片叶子包了进去，然后树脂硬化、埋进土里，几千万年变成化石。虫子没烂，是被‘封’在了时间里。",
+         "波罗的海、多米尼加最多。它算最温柔的化石：不靠硬骨头，靠一团黏糊的树泪把一瞬间的生命按了暂停。捡到带虫的，等于捡到一个几千万年前的‘此刻’。" ] },
+
+    { id:45, place:"海边，一块石头漂在我手边的浪上", ph:"浮石：满身气泡孔，能浮水",
+      t:["海边捡到一块灰白的石头，随手扔回水里，它居然浮着没沉。这是<b>浮石</b>（pumice）——岩浆里溶解的气体在喷出来减压时猛地冒泡，把石头撑成了一块‘气泡海绵’，孔隙比实心多得多，密度比水还轻。火山送给人的‘会游泳的石头’。",
+         "它轻、糙、满是小刃，老辈人拿它当天然磨脚石。想想也怪：最重的地底岩浆，竟能变成能漂的泡沫。冰岛、意大利那些喷过的地方海边常见。" ] },
+
+    { id:46, place:"火山脚下捡到一块纯黑的‘玻璃’", ph:"黑曜石：火山玻璃，贝壳状断口，刃口极利",
+      t:["火山脚下捡到一块纯黑、迎光透点棕红的‘石头’，敲开断口像玻璃一样亮，还带着弯弯的贝壳纹。这是<b>黑曜石</b>——岩浆喷到地表‘秒冻’，冷太快没长出晶体，就成了天然玻璃。它断口锋利得能划开皮肤。",
+         "古人拿它打箭头、刀片，比钢还利；考古里叫‘火山玻璃’。握着它，你握的是一块没来得及结晶的岩浆——地球最急性子的产物。" ] },
+
+    { id:47, place:"火山口边，捡到一块扭成麻花的石头", ph:"火山弹：飞行中拧转的熔岩团， aerodynamic 外形",
+      t:["火山口附近捡到一块石头，像有人把面团甩成纺锤、还拧了几圈。这叫<b>火山弹</b>（volcanic bomb）——岩浆被爆炸抛到半空，边飞边转、边冷，落地时已经定形，记着它在天上那几秒的旋转。",
+         "它和浮石是同源：都是喷出来的岩浆，一个憋了气变海绵，一个在空中拧成了麻花。石头也会‘摆造型’，只是摆完就凝固了。" ] },
+
+    { id:48, place:"黄石公园，一池子水准时蹦起来", ph:"间歇泉：周期性喷发，泉华堆积的锥，带硫味",
+      t:["黄石公园里一池子水，隔一阵‘呼’地喷起几米高的热水柱，周围一股臭鸡蛋味。这是<b>间歇泉</b>（geyser）——地下通道被地热烧得滚烫，水到沸点又被上头的水柱压住喷不出，憋到压力一松，瞬间炸成蒸汽和水柱，像高压锅定时放气。‘老忠实’大约每 90 分钟来一回。",
+         "喷口周围堆的乳白石头叫<b>泉华</b>（siliceous sinter），是水里的硅沉淀成的。站那儿看，像地球在按规定时间打喷嚏。" ] },
+
+    { id:49, place:"土耳其棉花堡，一片白得发亮的石台阶", ph:"钙华/ travertine 梯田：温泉水沉淀的碳酸钙阶",
+      t:["土耳其棉花堡，山坡上一层层白得晃眼的‘石台阶’，像冻住的瀑布。这是<b>钙华</b>（travertine）——温泉水从地下带出溶解的碳酸钙，一流到地表、压力温度变化，钙就沉淀下来，一层层叠成阶梯。水往哪流，石头就往哪长。",
+         "中国四川黄龙、美国黄石的 Mammoth 热泉也是同一出戏。踩上去凉滑，是几千年‘水变成石头’攒的台阶。和钟乳石是亲兄弟——都是一个道理：溶解的钙，遇着合适条件就析出。" ] },
+
+    { id:50, place:"退潮的泥滩，踩上去咔咔响的龟裂纹", ph:"泥裂：多边形干裂缝，可保存为化石",
+      t:["退潮后的泥滩，表面裂成一格格多边形的网，踩上去咔咔响。这是<b>泥裂</b>（mud cracks）——湿泥被太阳晒、风抽，表面收缩开裂，一格格像龟壳。雨一来又被填平。",
+         "这种纹要是被下一层泥沙盖住、压成石头，几亿年后还能在砂岩表面上看到，成了‘化石的裂纹’。所以你在石头上偶尔瞧见的网格纹，可能就是某天某阵太阳晒出来的。" ] },
+
+    { id:51, place:"河边沙滩，一片片平行的波浪纹", ph:"波痕/沙纹：对称(浪)或不对称(流)的起伏纹，可成岩",
+      t:["河边沙滩上，一片片平行的浅起伏，像被梳子梳过。这是<b>波痕</b>（ripples）——要么浪一来一回推的（对称），要么是一股水流单向推的（一边陡一边缓）。沙子按这个样子排，被埋住压成砂岩，亿年后还在石头面上。",
+         "地质学家看石头上的波痕，能反推当年是浪还是河：对称的多半是海边/湖边，不对称的八成是古河流。你脚下石板上的那道弯纹，可能记着一条早已消失的河的方向。" ] },
+
+    { id:52, place:"海边，一块孤零零的石柱站在浪里", ph:"海蚀拱→海蚀柱：浪掏穿崖脚，剩残柱",
+      t:["海边立着一根孤零零的石柱，离岸十几米，像谁插的。这是<b>海蚀柱</b>——原先是片连着的崖，浪日复一日啃崖脚、把软弱处掏穿成拱（<b>海蚀拱</b>），拱顶后来塌了，就剩中间这截孤柱站在水里。",
+         "和⑪那片海蚀平台是同一个过程的不同阶段：浪既是雕刻师也是拆迁队。今天你拍照的‘景点’，再过几千年可能就塌进海里了。" ] },
+
+    { id:53, place:"戈壁滩，石头表面一层黑亮如漆的皮", ph:"沙漠漆：岩石表面锰铁氧化物亮黑薄膜",
+      t:["戈壁滩上的石头，朝天那面覆着一层黑亮亮、像刷了漆的皮，摸着光滑。这叫<b>沙漠漆</b>（desert varnish）——不是人刷的，是干旱区尘土里极细的锰、铁氧化物，被露水和微生物一点点‘涂’在石头迎风面上，几千年攒出这么薄一层亮皮。",
+         "它黑得发亮，所以很多岩画就刻在这层皮上（像北美西南的岩画）。石头自己会长‘包浆’，比盘核桃还慢。" ] },
+
+    { id:54, place:"一片湖，水红得像掺了血，人浮着沉不下去", ph:"盐湖/粉红湖：高盐，杜氏盐藻致粉红，能浮",
+      t:["见过一片湖，水红彤彤的，人躺上去沉不下去，随便漂。这是<b>盐湖</b>——蒸发远大于补水，盐越攒越浓，浓到一般鱼活不了，却养出一种粉红色的小藻（杜氏盐藻），把整湖染红。盐度高，浮力大，人就漂着。",
+         "澳大利亚、柴达木盆地都有。盐湖边上常一圈白边，那是晒出来的<b>石盐</b>（halite，就是吃的盐的矿物版）。地球也会‘腌菜’。" ] },
+
+    { id:55, place:"铁矿区，指南针疯转指不准", ph:"磁铁矿/天然磁铁：岩石自带磁性，扰 compass",
+      t:["带着指南针走过一片黑沙滩，指针开始乱摆、死活指不准北。因为沙里有<b>磁铁矿</b>——一种本身带磁性的铁氧化物，整片岩石像吸铁石。古人管天然有磁的叫<b>lodestone（天然磁石）</b>，最早的‘指南针’就是它。",
+         "地球的磁场是全局的，可局部遇到这种磁性矿，罗盘就懵了。所以探矿的人看罗盘乱转，反而知道‘底下有铁’。" ] },
+
+    { id:56, place:"河床的石头上，三个趾头的脚印", ph:"恐龙足迹（遗迹化石）：三趾印痕留在岩面",
+      t:["某条河床的石头上，清清楚楚三个趾头的脚印，比手掌大。这是<b>恐龙足迹</b>——恐龙踩在湿泥上，泥干了、被新泥沙盖住、压成石头，脚印就保了下来。它不是骨头，是‘动作’的化石，叫<b>遗迹化石</b>。",
+         "脚印比骨头更‘活’：能从步距估出它跑多快，从朝向看出它去哪。美国得州 Paluxy 河那种踩在河床的大脚印最有名。石头上这枚，是某只龙某天某步走过的证据，比任何文字都直接。" ] },
+
+    { id:57, place:"石头摊，一枚螺旋的‘石头蜗牛’", ph:"菊石：头足类螺旋壳化石，缝合线复杂",
+      t:["石头摊上常有一枚螺旋的‘石头蜗牛’，纹路一圈套一圈，剖开还有复杂的折线缝。这是<b>菊石</b>（ammonite）——远古头足类（和今天的章鱼、鹦鹉螺远亲）的壳。它从寒武一直到白垩末都在海里漂，种类极多，演化快，地质学家拿它当‘指相化石’定地层年纪。",
+         "它和恐龙同一天退场：白垩末那场灭绝（就是陨石那次）把菊石和恐龙一起抹了。所以捡到一枚菊石，等于捡到一个白垩纪海洋的句号。" ] },
+
+    { id:58, place:"手里一块沉甸甸、坑洼的黑石头，说是天上掉的", ph:"铁陨石：密度大、表面熔蚀凹坑(气印)、维斯台登纹",
+      t:["朋友递来一块黑乎乎、坑洼洼的石头，掂着异常沉——是<b>铁陨石</b>。它穿过大气层烧得表面熔了又凝，留下拇指按过的凹坑（叫‘气印’），切面抛光酸洗后还会显出平行的‘维斯台登纹’，是地球上没有的合金花样。",
+         "它和⑯那颗澳洲锆石一样，是地球之外的来客——只是锆石是星星给的原子，这块是整块从太空砸下来的。握着它，你握的是一块别的星球的残骸。" ] },
+
+    { id:59, place:"银行大厅地面，亮得能照人的石头", ph:"大理石：石灰岩重结晶，可抛光，重折",
+      t:["银行、车站那些亮得能照出人影的地面，多半是<b>大理石</b>。它前身就是普通的石灰岩（和⑫海边那种含贝壳的一样），被埋深、受压受热，石灰岩里的方解石重新结晶，颗粒变粗、能磨得锃亮。本质上，大理石=被地球‘再烧’过的石灰岩。",
+         "所以大厦地面和海边礁石是亲戚——一个被请进屋抛光，一个还在浪里挨拍。变质作用（⑰）不挑石头，只挑境遇。" ] },
+
+    { id:60, place:"溪水里晃盘子，底上留几点黄亮", ph:"砂金：重矿物在河床富集，淘洗得金",
+      t:["看人淘金：一盆溪沙在水里晃，轻的随水走，盆底剩几点黄亮——是<b>砂金</b>。金密度大、性子稳，原岩被风化冲散后，金粒沉在河床拐弯的慢水处，一点点富集。淘，就是靠密度把金和沙分开。",
+         "1848 年加州那场淘金热，找的就是这个。它和⑬骨料同一条路：都是被水按轻重分过类的碎屑。河是台老式分选机，金沉底，沙漂走。" ] },
+
+    { id:61, place:"山里岩石上一道道白亮透明的‘筋’", ph:"石英脉：热液沿裂隙填晶，或成水晶晶洞",
+      t:["山里常见岩石上爬着一道道白亮、半透明的‘筋’，硬邦邦的。这是<b>石英脉</b>——富含二氧化硅的热液，顺着岩石裂缝渗进去、慢慢结晶，把缝填成石英。有时缝是空的，晶体会从四壁往中间长，长成洞里一簇簇尖柱子，就是<b>水晶</b>。",
+         "石英是地壳里最皮实的矿物之一（硬度 7），所以它能趁别的石头风化了还留在原地，成了一条条‘石筋’。工地、山路常见，是地球自己打的‘补丁线’。" ] },
+
+    { id:62, place:"海边的石头，一坨坨像叠起来的面包", ph:"枕状熔岩：水下喷发的玄武岩呈椭球枕状",
+      t:["某处海岸的石头，是一坨坨椭球叠着，像烤坏的面包堆。这是<b>枕状熔岩</b>（pillow lava）——岩浆在水下（或冰下）喷出，外皮瞬间遇水冻成壳，里头还软，就鼓成一个个枕头状的包，挨个叠着。",
+         "看到枕状熔岩，基本等于看到‘当年的海底’：它只在有水快速冷却时这样长。于是陆地上若冒出枕状熔岩，地质学家就知道——这儿以前是海床。是海洋留在石头上的胎记。" ] },
+
+    { id:63, place:"平原上孤零零一块大山来的巨石", ph:"冰碛漂砾：冰川搬来的远源巨石，孤立田野",
+      t:["一片平原中间，孤零零杵着一块好几吨的巨石，周围全是平地和细土，最近的山却在百里外。这是<b>漂砾</b>（erratic）——冰川像传送带，把远山的石头连根拔起、裹在冰里一路南搬，冰化了，石头就扔在了完全不对的地方。",
+         "加拿大艾伯塔那块‘Big Rock’就是典型，是冰川从几百公里外搬来的。所以平原上那块‘不该在这’的石头，是冰河时代留下的快递单，收件人写的是‘此处’。" ] },
+
+    { id:64, place:"基岩上一道道平行的深划痕", ph:"冰川擦痕/羊背石：冰底携砂刻出的平行沟与流线丘",
+      t:["光秃秃的基岩面上，一道道平行、朝同一方向的深划痕，像被巨爪挠过。这是<b>冰川擦痕</b>——冰河底部夹着沙子石子，像砂纸一样把底下的石头刮出沟，方向就是当年冰流去的方向。有时整块石头被磨成顺着流向的‘鲸背’（<b>羊背石</b>，roche moutonnée）。",
+         "和⑩冰蚀 U 形谷同源：冰既是刨刀也是砂纸。这些划痕是冰川走过的‘车辙’，几万年后还在石面上，比任何路标都古老。" ] },
+
+    { id:65, place:"山路塌了一段，整片林子滑到谷底", ph:"滑坡：坡体失稳整体滑移，掩路毁屋",
+      t:["下雨后走山路，一段坡整个塌了，树连根带着泥滑到谷底，路断了。这是<b>滑坡</b>（landslide）——坡太陡、水或震动把土和岩之间的‘咬合力’泡软，整块就顺着滑下去。Montgomery 写书专门讲：砍树、挖坡脚、暴雨，都是在给滑坡‘松闸’。",
+         "它和㉘河流下切是一体两面：水既能掏空坡脚诱发滑坡，也能把滑下来的碎屑搬走。山看着稳，其实一直在和重力拉锯，偶尔输一把。" ] },
+
+    { id:66, place:"挖坑，看到土是一层层的", ph:"土壤剖面：O/A/B/C 层，颜色质地递变",
+      t:["挖个坑看断面，土不是一整块：顶上几厘米是枯枝烂叶（O 层），往下黑松软（A 层，最肥），再往下颜色变浅、开始堆黏土或铁锈（B 层），最底下还是没风化的母岩碎（C 层）。这是<b>土壤剖面</b>。",
+         "土是石头的‘半成品’——风化（㉒）加烂叶子加蚯蚓，几百年攒出能种地的那层黑土。脚下看着平平的泥，其实是岩石到生命之间过渡的几层台阶。Montgomery 说，土壤没了，文明就悬了。" ] },
+
+    { id:67, place:"（想象）深海 2500 米，黑烟从石头烟囱里冒", ph:"黑烟囱：洋中脊热液喷口，350-400°C，化能生态",
+      t:["1977 年，深潜器‘阿尔文’下到东太平洋 2500 米深的洋中脊，看见海底立着几米高的‘烟囱’，噗噗冒黑烟，周围挤满红管虫、大蛤。这是<b>黑烟囱</b>（hydrothermal vent）——冰冷海水沿着洋壳裂缝渗到岩浆附近，被烧到 350–400℃，溶满金属硫化物，再喷出遇冷，矿物质瞬间凝成黑烟、堆成烟囱。",
+         "最反常识的是：那儿没阳光，生命靠喷口里的硫化氢‘吃饭’（<b>化能合成</b>，不是光合作用），养出一片‘黑暗森林’。石头烟囱和管虫一起长，是地球内部热能直接喂出来的生态。人类直到近几十年才知道海底还有这种地方。" ] },
+
+    { id:68, place:"（想象）深海或冻土，一种冰点着了", ph:"可燃冰/甲烷水合物：低温高压下甲烷被水笼包住，可点燃",
+      t:["有种‘冰’能点着——叫<b>可燃冰</b>（甲烷水合物）。在深海海底或冻土带，又冷又压大，甲烷气被水分子结成笼子‘关’在里面，看着是冰，一靠近火苗就烧起来，因为放出的是甲烷。",
+         "它封着的甲烷量惊人，是潜在的能源，也是个隐患：万一海底升温、笼子散了，甲烷（强温室气体）跑出来，会正反馈加剧变暖。地球把气‘冻’在海里存着，像一冰箱定时炸弹，只是计时器是温度。" ] },
+    { id:69, place:"看地质图，赤道附近标着冰碛岩", ph:"赤道附近(安哥拉/澳洲)新元古代冰碛岩与盖帽碳酸盐；古地磁示当时在赤道",
+      t:["地质图上有些冰碛岩（带坠石的泥砾）的位置很离谱——它们落在赤道附近，七亿多年前。按常理冰只该在两极，可那会儿整个地球，连赤道都结了冰，被冻成一颗雪白的雪球——这就是<b>雪球地球</b>（Snowball Earth）。证据是古地磁：当时这些岩层的位置就在赤道 7° 以内。",
+         "最怪的是它怎么解冻、又怎么反反复复：冰把地球反射率拉满，越冻越冷；可火山一直在吐二氧化碳，几百万年攒下来，温室效应又把冰壳撬开。冰期一退，大量养分入海，反而可能引爆了后来的生命大发展。地球曾经整颗冻住又整颗化开，不止一次。（出处：Hoffman 等 1998，Namibia；Kirschvink 1992）"] },
+    { id:70, place:"看白垩—古近纪交界那层黏土，铱超标", ph:"全球 K-Pg 界线黏土：铱异常、冲击石英、微球粒；尤卡坦 180km 坑",
+      t:["世界各地白垩纪和古近纪交界的那层薄黏土，铱含量高得反常——铱在地壳极少，在陨石里很多。同一层还有冲击石英和玻璃质微球粒。这层全球收据指向同一件事：约 6600 万年前，一颗约 10–15 公里宽的小行星砸在墨西哥尤卡坦，砸出约 180 公里宽的<b>希克苏鲁伯陨石坑</b>。",
+         "撞击扬起的粉尘遮了太阳好几年，全球骤冷、植物停摆、海洋酸化，连同恐龙在内的约 80% 物种没了。这是<b>白垩末大灭绝</b>，也叫 K-Pg 事件。Alvarez 父子 1980 年靠那层铱提出撞击说，坑本身是 1990 年代才确认。（出处：Alvarez《T. rex and the Crater of Doom》）"] },
+    { id:71, place:"南非金伯利，那个挖空的大坑边", ph:"金伯利岩管（胡萝卜形）：来自 150–450km 地幔，裹钻石高速上涌",
+      t:["南非金伯利有个挖空的大坑（Big Hole）。坑底下不是普通矿，是一种叫<b>金伯利岩</b>的怪岩浆——它从地下 150–450 公里的地幔深处，裹着二氧化碳噗地高速喷上来，像汽水瓶猛开。钻石本是那深处高温高压下结晶的碳，就被这股岩浆当顺风车带到了地表。",
+         "关键是快：慢了钻石会变回石墨。所以钻石是地球从地幔深处寄来的限时快递，有的年纪比大陆还老。握着钻戒，你握的是地底几百公里、几十亿年的碳。（出处：金伯利岩与地幔柱研究）"] },
+    { id:72, place:"墨西哥湾边，一片穹隆和油井", ph:"巨厚盐层上覆沉积，盐因比周围轻向上刺穿成穹隆，圈闭油气",
+      t:["墨西哥湾海底和沿岸，地下埋着一层几公里厚的古盐（蒸发岩）。盐比上头的泥沙轻，像个慢动作的熔岩灯，几百万年一点点往上拱，刺穿、顶弯上面的岩层，隆起成<b>盐丘</b>（salt dome）。",
+         "这拱起的结构恰好成了油气的陷阱——油气的通路被盐挡住、聚在盐丘周围。所以沿着墨西哥湾一排排盐丘，底下常压着大油田。1901 年得州 Spindletop 第一次喷出巨量油，就是撞上了盐丘。地球用一层盐，把油替我们攒好了。（出处：Gulf of Mexico 盐构造研究）"] },
+    { id:73, place:"加拿大西北，黄刀镇以北一条河边的一块灰石头", ph:"Acasta 片麻岩，4.03 Ga，锆石铀—铅定年；地球最古老整岩",
+      t:["加拿大西北、黄刀镇以北一条叫 Acasta 的河边，有块灰扑扑、看着平平无奇的片麻岩。可它定年约 <b>40.3 亿年</b>——地球自己才 45.6 亿岁，这块是已知最古老的完好岩石。靠的还是里头锆石的铀—铅时钟（见⑯）。",
+         "它证明地球在诞生后一亿多年，就已经长出大陆地壳了。比它更老的只剩澳洲那几粒 44 亿年的锆石碎片（⑯），但那不是整块石头。脚下这块灰岩，是地球最早那层壳的残片，没被后来翻来覆去折腾掉。（出处：Bowring & Williams 1999）"] },
+    { id:74, place:"南极冰盖，捡到一块土豆大的黑石头", ph:"ALH84001，1.9kg，44 亿年火山岩，来自火星，约 1.3 万年前落地",
+      t:["1984 年有人在南极阿仑山冰盖捡到一块土豆大、1.9 公斤的黑石头，编号 ALH84001。一分析，它的氧同位素指纹和别处都不一样，和火星对得上——它是在火星上结晶、约 44 亿年前的一团火山岩。",
+         "约 1600 万年前，有天体撞了火星，把它崩进太空；飘了千万年，约 1.3 万年前掉在南极。它可能是最老的火星岩石样本，还带碳酸盐，让人猜火星早年有没有水甚至生命。握着它，你握的是隔壁星球的一段童年。（出处：NASA / 自然史博物馆）"] },
+    { id:75, place:"看剖面图，把珠峰塞进海沟还差一英里水", ph:"马里亚纳海沟/挑战者深渊约 10935m；太平洋板俯冲菲律宾板",
+      t:["西太平洋有道月牙形的深沟，最深处叫挑战者深渊，约 <b>10935 米</b>。把珠穆朗玛峰（8849 米）整个塞进去，山顶还差两公里多的水才露头。这是地球的最低点。",
+         "它怎么来的？太平洋板块俯冲到菲律宾板块底下，前端往下拽，把上面的地壳拖出一道深沟——这就是<b>俯冲带</b>。这里也产全球最大的地震和海啸。海底最深的伤疤，是板块咬合时啃出来的。（出处：NOAA / Britannica）"] },
+    { id:76, place:"智利阿塔卡马沙漠，一个挖到 1 公里深的巨坑", ph:"斑岩铜矿：岩浆热液沿裂隙网填铜，低品位大体积，智利最集中",
+      t:["智利阿塔卡马沙漠里，有些坑挖到近一公里深、一圈圈台阶像环形山。那是<b>斑岩铜矿</b>——地下几公里有个大岩浆房，热液顺着无数发丝状裂隙网往上渗，把铜（还有钼、金、银）一点点填进石头缝里。",
+         "它品位极低（铜含量低到 0.15% 都划算），但体量巨大，是全球铜的绝对主力。北智利集中了最大的几个。今天电线、电池、电机里的铜，多半来自这种热水在石头缝里写的便条。（出处：Sillitoe / USGS）"] },
+    { id:77, place:"看 2004 年新闻，海水退得很远又猛扑回来", ph:"海底地震抬升洋底→整柱水被掀起，深洋时速约 800km，近岸成墙",
+      t:["2004 年印度洋那次，震后海水先退得极远，露出海底，几分钟后几层楼高的水墙扑回来。原因是海底地震把一大片洋底猛地抬起几米，整根水柱被掀起来——这才是<b>海啸</b>。",
+         "它在深海几乎看不出（浪高不到一米），却以喷气式客机的速度（约 800 km/h）跨洋跑。进了浅水才减速、叠高成墙。大多由俯冲带（见⑰那类）地震引起。海水退得反常远，就是它要回来的信号。（出处：WHOI / 海啸机理）"] },
+    { id:78, place:"锯开一段枯木，数一圈圈", ph:"年轮宽窄记气候，交叉定年可推千年；狐尾松 4000+ 年",
+      t:["锯开枯木，一圈圈数，圈数就是岁数。圈宽窄还记着当年的气候：旱年窄、润年宽。同一片区的树，同年份的宽窄规律一致，把老树外层和新树内层对上，就能把年表一路接回几千年前——这叫<b>交叉定年</b>（dendrochronology）。",
+         "加州狐尾松有活过 4000 年的，年轮就是一部气候档案，连火山灰年、干旱年都留痕。木头是活档案，年轮是记录。建房子用的旧梁，靠年轮能定出是哪年砍的。（出处：Douglass / NPS）"] },
+    { id:79, place:"热带红土坡，挖开是赭红色、晒硬能当砖", ph:"砖红土/铝土矿：湿热风化淋失硅，富积铁铝，是铝矿",
+      t:["热带红土坡，土是赭红色的，湿软、晒干却硬得能当砖（砖红土 laterite 这名字就来自砖）。它是岩石在长年湿热里被洗出来的：雨水把钠钾钙硅全淋走，剩下最不肯走的铁和铝，越积越红。",
+         "铝积得特别多的那种，就是<b>铝土矿</b>——炼铝的原料。几内亚、澳洲那些大铝矿，本质都是亿万年风化没搬走的残渣。脚下的红泥，是地球把石头淘洗后剩下的硬骨头。（出处：Britannica / bauxite 风化）"] },
+    { id:80, place:"黄石公园，站在个会缓缓起伏的大盆地上", ph:"黄石破火山口 64 万年前塌成，约 80km 宽，岩浆房近在脚下数公里",
+      t:["黄石公园那片高地，其实是个大盆地的底——<b>破火山口</b>（caldera）。约 64 万年前，地下浅处（几公里）一大团粘稠岩浆猛烈喷出，空了的岩浆房顶塌下来，砸出约 80 公里宽的坑。喷出的灰最远落到了加州、路易斯安那。",
+         "这叫超级火山。它现在还在动：地面一鼓一陷，是因为底下岩浆和热液在进出。最近一次大喷是 64 万年前，之后只溢些慢悠悠的熔岩。但脚底下几公里就是岩浆房，公园的喷泉地热都靠它供着。（出处：USGS Yellowstone）"] },
+    { id:81, place:"看岩石剖面上由粗到细的渐变层", ph:"浊流：海底滑坡卷沙泥顺坡冲下，递变层理，远端细",
+      t:["有些砂岩剖面，一层里从底到顶由粗到细渐变，还夹着波纹和泥。这是<b>浊积岩</b>——海底某处滑坡或地震，把沙泥搅成一股高密度浊流顺坡冲下，像海底的泥石流，沿途按轻重一层层沉下来。",
+         "它记着深海偶尔的山崩。远端细、近端粗，地质学家靠这套递变层理，能在翻过来的老地层里认出哪头朝上。深海不是永远平静，也会突然跑泥石流。"] },
+    { id:82, place:"石器时代工具，敲一下迸火花", ph:"燧石/黑燧石：微晶石英，贝壳断口与火花，做石器",
+      t:["石器时代的人拿一块黑亮石头敲，棱边能迸出火花——那是<b>燧石</b>（flint / chert），本质是极细的石英（玉髓）。它断口是贝壳状、锋利得能割肉，古人拿来打刀、打箭尖。",
+         "它多在白垩、石灰岩里成层长，是远古硅质小生命（放射虫、硅藻）的残骸压实成的。所以打火石不只是一块石头，是亿万个微体生物的骨头攒成的刀。（出处：史前石器 / 硅质岩）"] },
+    { id:83, place:"铅笔芯，其实是黑乎乎的碳", ph:"石墨：碳的同素异形体，层状软滑，与钻石同源",
+      t:["铅笔芯那一抹黑，是<b>石墨</b>——和钻石一样是纯碳，只是原子排法不同：钻石是立体紧锁，石墨是一层层松松叠着，所以软、能写、能当润滑剂。同素异形体，命运天差地别。",
+         "它常在高温变质的岩里出现，也以矿床形式存在。最离谱的是有些石墨里的碳，来自远古生物——石头里掺着生命的残骸。碳既能当最硬的钻，也能当最软的笔。"] },
+    { id:84, place:"荒野里一块巨石，裂成一层层洋葱球", ph:"球状风化：节理角处更易风化，棱角先退，剩球状核",
+      t:["荒野里有些巨石，表面裂成一圈圈，像被剥了皮的洋葱，越往里越圆。这是<b>球状风化</b>——石头有裂缝（节理），棱角处三面通风、最容易先被风化啃掉，于是方石头慢慢圆成了球。",
+         "和⑧那讲硬石头留尖峰是同一套逻辑的另一面：风化不只分软硬，还挑角落。棱角先没，方块变圆球，是石头被风化的方式在挑位置。"] },
+    { id:85, place:"河床岩石上一个圆得发亮的深坑", ph:"壶穴：急流带砂砾旋磨基岩，钻出圆坑",
+      t:["河床的硬岩上，常有个圆得发亮、深不见底的小坑，像有人拿钻子旋出来的。这是<b>壶穴</b>（pothole）——急流把砂砾卷进石缝里的旋涡，像天然砂轮，年复一年把石头磨出个圆洞。",
+         "水流越急、带的东西越粗，坑钻得越深。它是河流就地打孔的活证据，比任何标注都直白：这水，当年旋得有多狠。"] },
+    { id:86, place:"戈壁，一排排风蚀的土丘像舰队", ph:"雅丹：干旱区风携砂定向吹蚀，垄槽相间如舰队",
+      t:["戈壁里有成排的土丘和沟槽，远远看像搁浅的舰队——这是<b>雅丹</b>（yardang）。干旱少雨，风裹着砂朝一个方向猛吹，软岩被啃出垄、硬些的留成丘，定向排开。",
+         "和⑨那阵风成沙丘（堆积）相反，雅丹是风在拆而不是堆。同一个风，既能垒起沙山，也能雕出舰队。罗布泊、柴达木最多这种风刻的地貌。"] },
+    { id:87, place:"地面突然塌个大洞，露出地下河", ph:"天坑/落水洞：可溶岩被水溶蚀掏空，顶盖塌陷成坑",
+      t:["有些地方地面好好的，忽然塌出个几十米深的大坑，底下还露出暗河——这是<b>天坑 / 落水洞</b>。底下是可被水溶的石灰岩（见⑦喀斯特），水流把内部掏空成洞，顶盖终于撑不住塌了。",
+         "广西、贵州那些巨型天坑就是这样来的。和⑦钟乳石是同一套溶蚀的一明一暗：一个慢慢长，一个突然塌。脚下的地，可能正悬在一片被水掏空的空腔上。"] },
+    { id:88, place:"红色砂砾岩被水切出的陡崖，像烧红的城", ph:"丹霞：红层（含铁砂砾岩）经流水切割、风化，成陡崖峰林",
+      t:["有些山是通体赭红、崖壁笔直像城墙，夕阳下像烧着——这是<b>丹霞</b>地貌。石头是亿万年前的红色砂砾岩（里头铁多，氧化成红），被水流切、被风化卸，劈出陡崖和方山。",
+         "它和⑧那硬石头立尖峰、和张家界石英砂岩峰林是亲戚，只是母岩是红层。广东丹霞山、张掖彩丘都属这一类。一片红石头，是地球把铁锈铺开后切出来的。"] },
+    { id:89, place:"基岩上一只只圆肚深坑，像石盆", ph:"冰臼：冰川融水裹砂砾旋磨基岩，钻出圆盆状坑",
+      t:["有些基岩上有一只只圆肚、口小肚大的深坑，像石盆——这是<b>冰臼</b>（giant's kettle）。冰川底部融水带着砂砾，在石缝里高速旋磨，像电钻把石头旋出圆坑。",
+         "和⑩冰川擦痕、⑭冰碛漂砾同源，都是冰的手工。冰臼是冰底水流就地打出来的盆，比壶穴（85）更暴力一档——因为动力是整条冰川的融水。"] },
+    { id:90, place:"火山脚下，灰泥像混凝土一样冲下镇子", ph:"lahar：火山灰+水成高密度泥流，顺谷冲毁一切",
+      t:["火山喷完，坡上积了厚厚一层松灰。一下大雨（或冰雪融化），灰和水混成一股高密度泥流，像流动的混凝土，顺着峡谷冲下，能埋掉整座镇——这叫<b>拉哈</b>（lahar）。",
+         "1985 年哥伦比亚内瓦多·德尔·鲁伊斯火山，一次 lahar 就淹了阿尔梅罗镇、死两万余人。它比熔岩跑得远得多，是火山最阴的杀手。灰落完，真正的危险才刚开始。"] },
+
+    { id:91, place:"翻矿物图鉴，发呆", ph:"示意：太阳系诞生时约12种矿物 → 如今逾5000种，多数与生命相关",
+      t:["翻一本矿物图鉴，越翻越不对——怎么会有五千多种矿物？我原以为石头就那几种固定的成分，长来长去都是石英长石那老几位。后来读 Hazen《The Story of Earth》才明白，矿物不是一开始就这么多。",
+         "书里说，太阳系刚诞生时，整个太阳系里能稳定存在的矿物大概只有十来种（约12种）——就是那些耐高温、不管环境多恶劣都撑得住的硅酸盐、氧化物之类。后来地球冷却、水出现、板块运动、生命登场，矿物才像物种一样'辐射演化'出来。现在已知的五千多种矿物，三分之二以上都跟生命直接或间接有关。也就是说，石头种类的丰富，是地球变'活'之后才有的事。矿物也会进化，这念头挺新鲜。（出处：Hazen《The Story of Earth》）"] },
+
+    { id:92, place:"西澳鲨鱼湾，栈桥上看水里的石头", ph:"Hamelin Pool 叠层石：灰绿圆丘，表面活蓝菌，底下是层层石灰岩",
+      t:["栈桥下海水里趴着一堆灰绿色的圆丘，远看像放歪的白菜，凑近才发现是石头——一层层叠起来的。向导说这叫<b>叠层石</b>（stromatolite），现在还活着，表面那薄薄一层是蓝绿色的<b>蓝菌</b>（cyanobacteria，以前叫蓝绿藻）。",
+         "它们怎么长？蓝菌铺成黏糊糊的毯子，海水流过时把沙和钙粒糊上去，蓝菌为了晒太阳就从底下往上钻，一层盖一层，几千年才长高一点点。更离谱的是：今天这些蓝菌，跟35亿年前化石里的几乎一模一样——那时候地球上还没有动植物，是它们在慢慢往大气里吐氧气，才把地球改造成了能喘气的地方。脚下这坨'石头'，是还在动的远古。"] },
+
+    { id:93, place:"沙漠里捡到一块沉甸甸的黑石头", ph:"球粒陨石断面：基质里嵌着浑圆小球粒（chondrules），像撒了芝麻",
+      t:["沙漠里踢到一块黑石头，攥手里比旁边石头沉得多，表面还结着一层焦壳。拿回去切开，里头灰白的基质里撒着无数浑圆的小球粒，像撒了芝麻。这叫<b>球粒陨石</b>（chondrite），那小球叫<b>球粒</b>（chondrule）。",
+         "球粒是46亿年前太阳星云里瞬间熔融又急冻的小 droplets，没经过母体的改造，等于把太阳系刚出生那会儿的尘埃原样冻住了。也就是说，手里这块不是地球生的，是太空中飘了几十亿年、恰好砸下来的老古董。它比地球上最老的岩石还老。"] },
+
+    { id:94, place:"博物馆，盯着一块 limestone 板", ph:"始祖鸟标本：羽毛印痕 + 牙齿 + 长骨尾，一眼看去既像鸟又像爬行动物",
+      t:["博物馆一块石灰岩板上，印着一只巴掌大的小动物的影子：有清晰的羽毛印，可嘴里有牙，尾巴是一串硬骨节，不像鸟那个秃尾椎。这就是<b>始祖鸟</b>（Archaeopteryx），一亿五千万年前的家伙。",
+         "它像被定格在'鸟'和'恐龙'的中间——翅膀羽毛有了，可爬行动物的牙和长尾巴还没丢掉。当初古生物学家看到那根羽毛印痕都愣了：原来鸟不是凭空出现的，是带牙长尾巴的祖先，一边保留老装备、一边把前肢变成了翅膀。一块石头，把两个纲的裂缝给填上了。"] },
+
+    { id:95, place:"湖北青龙山，蹲在露头的蛋窝边", ph:"白垩纪红色砂岩里一窝窝圆蛋，有的成圈排列，最多一窝61枚",
+      t:["脚下的红砂岩里，一窝窝椭圆蛋整整齐齐排着，有的围成圈，像谁刚下的。最大的一窝数出过61枚。这是晚白垩世（距今约6700万到1亿多年）的<b>恐龙蛋</b>化石群，原地埋着几十万枚，是世界上最密的一处。",
+         "有意思的是，它们是成窝、成层的——说明恐龙会回到固定地点下蛋，是'专属产蛋区'。蛋壳是钙化的，埋进河滩泥里没被踩碎，慢慢石化。看着这一地圆蛋，忽然觉得恐龙没那么遥不可及：它们也像鸟一样，找个安静地儿，把下一窝的希望摁进土里。"] },
+
+    { id:96, place:"高原上山脊，向导说这是'海底'", ph:"蛇绿岩套：底橄榄岩 → 辉长岩 → 枕状玄武岩 → 顶部深海沉积，完整洋壳",
+      t:["在海拔三千米的山脊上，向导指着脚下一套石头说：'这套本来在海底。'我半信半疑。可剖面真齐：最底下是墨绿粗粒的<b>橄榄岩</b>，往上变<b>辉长岩</b>，再往上是枕状的<b>玄武岩</b>（像一堆堆叠的枕头），最顶还盖着薄薄的深海软泥。这正是大洋壳从上到下的完整次序。",
+         "这种整套从洋底翻上山的岩石序列，地质上叫<b>蛇绿岩</b>（ophiolite）。它是板块打架时，把一片古大洋的壳硬生生仰冲到了陆地上——就像把海底连锅端到了山顶。所以山再高，石头记得它曾经在海里。"] },
+
+    { id:97, place:"看日本列岛地质图，两侧石头脾气相反", ph:"双变质带：靠海沟一侧高压低温（蓝片岩/榴辉岩），靠陆一侧高温低压（花岗岩/角闪岩）",
+      t:["看日本列岛的地质图，一条俯冲带旁边，两边的变质岩像被分到两个房间：靠大洋那侧，石头在'高压低温'下被压成了蓝色的<b>蓝片岩</b>、甚至更狠的<b>榴辉岩</b>；靠陆地那侧，却是'高温低压'，花岗岩、<b>角闪岩</b>一片。同一座岛弧，两种相反的厨房。",
+         "这叫<b>双变质带</b>（paired metamorphic belts），是俯冲带的招牌现象——大洋板块往地下扎的那一侧冷而受压，另一侧岩浆往上拱却热。一冷一热，把地球内部的'火候'差异直接写在石头上。当初就是靠这个，地质学家才确认日本底下真有大洋板块在往里钻。"] },
+
+    { id:98, place:"东非开车，地形忽然裂成深沟", ph:"东非裂谷：地堑深沟 + 裂谷湖 + 火山，地壳正被慢慢撕开",
+      t:["在东非开车，平地里忽然裂出一道深沟，沟里还卧着长条形的湖，两边山坡上一座座圆锥火山。当地人说这是<b>东非裂谷</b>（East African Rift）。我原以为是一般的山谷，后来才懂——这不是被河切出来的，是地壳正被从中间往两边撕。",
+         "地幔往上顶、板块往两侧扯，把非洲东部一点点掰开。照这速度（每年几毫米），几千万年后这儿会裂出一片新大洋，把东非变成孤岛。我们现在刚好活在'大陆正在离婚'的现场。脚下的裂缝，是下一个海洋的草稿。"] },
+
+    { id:99, place:"看科普，想到有人想钻穿地壳", ph:"莫霍面：地震波在地下突然提速的界面，海洋下约5–10km、大陆下约30–50km",
+      t:["上世纪有群科学家雄心勃勃，要打一口井 straight 穿过地壳、钻到地幔去，项目叫'MOHOLE'。结果打到十几公里就再也打不动了——地壳比想象厚得多，钱也烧光了，不了了之。那层他们想够着的界面，叫<b>莫霍面</b>（Moho）。",
+         "它是地壳和地幔的分界：地震波走到地下某深度会突然提速，说明底下物质密度变了。海洋底下它浅，大概五六到十公里；大陆底下深，三五十公里。我们脚踩的地壳，薄的地方像蛋壳，厚的地方像城墙，而莫霍面就是那道'壳底'。至今没人真正钻穿过它。"] },
+
+    { id:100, place:"想到石头里藏着钟", ph:"铀铅衰变钟：U-238→Pb-206（半衰期44.7亿年）、U-235→Pb-207，测矿物年龄",
+      t:["有些矿物（比如前面提过的锆石）生来就含一点点铀，几乎不含铅。可铀不安分，会慢慢变成铅——这个'变质'速度极稳，像滴答作响的钟。这叫<b>铀铅定年</b>（U-Pb dating）。",
+         "铀238变成铅206要花约44.7亿年（半衰期），铀235变成铅207更快些。测出一块矿物里剩多少铀、攒了多少铅，就能反推它几岁。地球自己45.6亿岁、月球、最老的石头，好多年龄都是这口钟报出来的。石头不说话，但它的原子在悄悄数时间。"] },
+
+    { id:101, place:"看 K-Pg 边界那层黏土，想白垩纪末尾", ph:"冲击石英：石英里出现平行裂面（平面变形构造 PDF），只有撞击冲击波能压出",
+      t:["白垩纪末尾那层薄黏土里，石英颗粒有点怪——在显微镜下，晶体里有一组组平行的细裂面，像被整齐地切开过。普通的挤压、变质绝压不出这种花样，只有瞬间几万大气压的冲击波才成。这叫<b>冲击石英</b>（shocked quartz）。",
+         "这种平行裂面，地质上叫<b>平面变形构造</b>（PDF，planar deformation features）。它是小行星撞地球的'指纹'：6600万年前那颗砸下来的星，冲击波把遍地的石英都压出了这种记号，然后混进全球落下的尘埃里。所以一看到石英里有这平行裂面，就知道——这儿挨过撞。"] },
+
+    { id:102, place:"田里捡到一颗黑亮的玻璃球", ph:"玻璃陨石：黑色玻璃质珠/块，成分像地球岩石被熔融后甩出再冷凝",
+      t:["东南亚和澳洲的田里，常有人捡到黑亮、沉手的玻璃珠子或小块，不像火山玻璃那么多孔。这叫<b>玻璃陨石</b>（tektite）。它成分其实更像地球上的砂岩、页岩被熔融后急冻——不是火山，是地外来客撞出来的。",
+         "小行星或彗星砸中地表，把地球自己的岩石瞬间熔成液滴，抛到天上再落回来，冷凝成玻璃。同一场撞击的玻璃会散落一大片，叫'散落场'——比如澳亚散落场横跨几千公里，年代约79万年前。一颗黑玻璃球，是地球被揍了一拳、溅出来的血点子。"] },
+
+    { id:103, place:"从卫星图看一个圆湖，中间有山", ph:"复杂撞击坑：圆坑 + 中央峰/环，直径超过阈值才出现（简单坑→复杂坑）",
+      t:["卫星图上一个近乎完美的圆湖，中间却突兀地矗着一座小山，怎么看都不像火山口（火山口一般在边缘，不在正中）。这是<b>撞击坑</b>（impact crater）的招牌——中央峰。",
+         "小陨石坑是个碗（简单坑）；可当坑够大（直径过几公里），坑底被撞得 rebound，像水滴砸进水面回弹那样，在正中鼓起一座山或一圈环，变成'复杂坑'。月球、水星上满是这样的圆坑带中央峰。所以'圆坑中央有山'，基本就是'这儿被天外客砸过'的暗号。"] },
+
+    { id:104, place:"看深海岩芯的氧同位素曲线，一上一下摆", ph:"米兰科维奇旋回：偏心率~10万年、地轴倾角~4.1万年、岁差~2.3万年，驱动冰期",
+      t:["把深海岩芯里氧同位素曲线拉出来，冷暖像心电图一样来回摆，而且摆的周期很规整：约10万年一大循环，夹着4.1万年和2.3万年的小波动。这不是随机的，是地球轨道在变。",
+         "这套叫<b>米兰科维奇旋回</b>（Milankovitch cycles）：地球绕日的椭圆胖瘦（偏心率，~10万年）、地轴歪的角度（倾角，~4.1万年）、地轴指向的进动（岁差，~2.3万年）三者叠加，微调了照到高纬的阳光，于是冰期间冰期就这么被'天文钟'拨来拨去。原来冷暖交替，部分答案在天上。"] },
+
+    { id:105, place:"显微镜下的小贝壳，想它壳里的氧", ph:"底栖有孔虫：壳的氧同位素（δ¹⁸O）偏重=冰多/冷，偏轻=暖，记百万年气候",
+      t:["显微镜下一种沙子似的小贝壳，叫<b>有孔虫</b>（foraminifera），死后沉到海底积成泥。它壳是用海水里的氧造的，而氧有两种：轻的¹⁶O 和重的¹⁸O。天冷、冰盖大时，轻氧被锁进冰川，海里剩的重氧多，壳就偏'重'。",
+         "所以测这些小贝壳壳的<b>氧同位素</b>（δ¹⁸O），就能读出当年的冰量和水温——而且是几百万年连续不断的记录，比冰芯还长。底栖的（趴海底的）尤其稳。一枚小到看不见的壳，是地球塞进沉积里的温度计兼冰量计。"] },
+
+    { id:106, place:"北大西洋一片海，表层水往下沉", ph:"AMOC / 温盐环流：湾流把暖水送北大西洋→变冷下沉→全球'传送带'约千余年一圈",
+      t:["北大西洋有一片海，表层温暖咸水流到这里变冷、变重，竟然整个往下沉，沉到深海底往南走。这就是<b>温盐环流</b>的'下沉臂'，其中北大西洋那段叫 <b>AMOC</b>（大西洋经向翻转环流）。",
+         "它连着著名的<b>湾流</b>（Gulf Stream），把热带的暖往北送，自己沉下去再从深海绕回，像个全球传送带，一圈大约要千把年。它把热量捎给欧洲，让那边比同纬度暖得多。近年有人担心格陵兰冰融化把表层冲淡、下沉变弱——这趟'传送带'一旦减速，气候棋局就得重摆。"] },
+
+    { id:107, place:"想火山岩冷却时记下的磁场", ph:"磁极倒转：火山岩冷却锁定当时地磁；洋中脊对称条带；最近一次78万年前",
+      t:["火山岩冷却时，里头含铁的矿物会像指南针一样，按当时的地磁场方向'冻'住。后来人们发现，有的老岩石磁极是反的——南北对调过。这叫<b>地磁倒转</b>（geomagnetic reversal）。",
+         "最直观的证据在洋底：大洋中脊两边，岩石的磁性一条正一条反，对称排开，像录音带记下了磁场一次次翻转。最近一次翻转在约78万年前（Brunhes–Matuyama 事件），再之前平均几十万年翻一次。地球这根'磁针'，其实从来不是永远指着同一边。"] },
+
+    { id:108, place:"南极钻出的冰柱，一层年一层", ph:"冰芯：年层 + 封住的古大气气泡；南极连续记录约80万年，冰期CO₂ 180–300ppm",
+      t:["南极钻出来的冰柱，从顶到底一层年一层，像把几十万年的雪压实成透明的史书。更神的是，冰里封着一个个小气泡——那是当年陷进去的空气，等于把古大气原样冻存了。",
+         "南极的冰芯能连续读出约80万年的记录：冰期时气泡里 CO₂ 只有约180–200 ppm，间冰期升到约280 ppm；而今天已经冲到420 ppm 往上。温度、尘埃、甲烷，全在气泡和冰的同位素里。一根冰柱子，是地球呼吸过的空气的样本库。"] },
+
+    { id:109, place:"西北黄土高原，崖边的窑洞前", ph:"黄土高原：风积的粉砂，壁立陡崖，能挖窑洞住人",
+      t:["西北那片黄土高原，崖壁刀切一样立着，却住着人——窑洞就掏在土里。这土不是本地长的，是风从更远的地方吹来的极细粉砂，叫<b>黄土</b>（loess）。",
+         "它松散、没层理，干燥时能站稳陡壁，一下雨却容易塌（湿陷）。黄土高原这层黄土平均厚五六十米，最厚处能到三百米，是世界最大的一片。黄河那股浑黄，就是它被冲进河里的。脚下的黄土地，其实是几万年来被风搬运、摞起来的远方的土。"] },
+
+    { id:110, place:"深海摄像里一根冒黑烟的'烟囱'", ph:"黑烟囱：洋中脊裂隙喷300–400°C含矿热液，遇冷沉淀硫化物黑烟，周围黑暗生态",
+      t:["深海摄像里，洋中脊的岩石缝中竖着一根根黑柱子，顶上咕咕冒'黑烟'。可那不是烟，是约300–400°C的热液，富含金属，一遇2°C的海水就瞬间沉淀出黑色的硫化物微粒。这叫<b>黑烟囱</b>（black smoker）。",
+         "海水沿裂缝渗到岩浆房附近被加热、啃下金属，再喷出来，硫化物堆成烟囱，最高能长几十米。怪的是周围没阳光却热闹——管虫、盲虾靠着吃'啃硫化物的细菌'活，是一套不靠太阳的'黑暗生物圈'。海底黑烟囱，像是地球自己在深海架的炉子。"] },
+
+    { id:111, place:"想将来地质学家挖到我们这层", ph:"人类世：约1950年起，地层里塑料、放射性沉降（核试验）、混凝土成标志层",
+      t:["将来几百万年后的地质学家，挖到我们这一层地层，会一眼认出来：里头塑料遍地、混凝土成层、还有一道全球同步的放射性尖峰（上世纪四五十年代核试验落下的）。这一层跟底下几千年的土截然不同。",
+         "不少学者提议把从约1950年（'大加速'）开始的这段叫<b>人类世</b>（Anthropocene）——人类取代河流、冰、风，成了塑造地球表面的最主要力量。我们这代人的垃圾和混凝土，正在变成未来的'化石层'。这层'人类层'，才刚开始写。"] },
+
+    { id:112, place:"石笋切开，一圈圈亮暗", ph:"石笋/纹层：像树轮一样的年层与季风气候记录，可用U系定年",
+      t:["溶洞里的石笋（见⑦钟乳石同源）切开或磨平，会露出一圈圈亮暗相间的纹，像树轮但更老。这是<b>纹层</b>（laminae）——每年雨季水多、旱季水少，沉淀的快慢不同，就叠出一层亮一层暗。",
+         "数这些纹，再配合 <b>铀系定年</b>（U-series，测石笋里铀衰变）卡准年代，就能还原几万甚至几十万年的降雨、季风强弱。石笋于是成了'气候日记'，比树轮长得久。一根石笋，是洞穴用滴水写了几万年的天气账。"] },
+
+    { id:113, place:"戈壁里一排新月形沙丘", ph:"新月形沙丘（barchan）：迎风凸、背风两角指向下风，每年可移动1–100米",
+      t:["戈壁里一排沙丘，侧面看像一个个朝一个方向躺的新月，两个尖角拖在下风那侧。这叫<b>新月形沙丘</b>（barchan），是风向稳定时沙子堆出的。",
+         "它自己会'走'：迎风面被风啃、背风面（滑落面）落沙，整个丘就顺着风慢慢挪，一年能移几米到上百米。小的跑得快，大的慢但稳。所以沙漠不是死的——沙丘像慢镜头里的波浪，年年换位置。脚下这片沙，正悄悄搬家。"] },
+
+    { id:114, place:"旱季看一条河分十几股", ph:"辫状河：多股交织水道 + 心滩，泥沙多、坡陡、河道不稳",
+      t:["旱季看一条河，水没几缕，却分成十几股在石子堆里乱窜，像姑娘辫子一样交织，中间还夹着一个个光秃秃的沙石岛。这叫<b>辫状河</b>（braided river）。",
+         "它和⑤那种弯来绕绕的曲流河相反：辫状河泥沙特别多、坡又陡，水道今天冲开明天淤死，极不稳定，所以分叉成一片。冰川脚下、洪水频繁的河常这样。水在石子间分了又合、合了又分，是河流最'多动症'的样子。"] },
+
+    { id:115, place:"站在峡谷边，河弯成圆环嵌在石里", ph:"嵌入曲流：原来的河弯被地壳抬升/下切，刻进基岩成深切圆环",
+      t:["站在峡谷边往下看，河弯几乎勒成一个圆环，深深嵌在石头里，崖壁笔直。这不像⑤那种在平地上慢慢画的弯——它是被'刻'进岩石的。这叫<b>嵌入曲流</b>（entrenched meander）。",
+         "原来河在平原上画了个弯，后来地壳抬升（或基准面下降），河不肯改道，就沿着老弯一路往下切，把弯生生刻进基岩。科罗拉多河、长江的一些峡谷都有这种近乎闭环的深深河弯。一个老河弯，被时间和抬升，雕成了石头里的圆环。"] },
+
+    { id:116, place:"灰岩里敲出半片带格子纹的'小盾牌'", ph:"三叶虫：寒武纪最常见化石，身体纵分三叶、外骨骼分节、会蜕壳",
+      t:["野外灰岩里常能敲出半片带格子纹的'小盾牌'，头、胸、尾清清楚楚，背中线把身体分成了左、中、右三瓣——这就是<b>三叶虫</b>（trilobite），寒武纪海洋里最常见的小家伙。它浑身包着一层钙质外骨骼，长得像穿了铠甲的分节面包虫。",
+         "它靠蜕壳长大：每长一截就脱一次旧甲，旧壳留在泥里成了化石，所以同一层里常能捡到一堆空壳。从约5.2亿年前出现到2.5亿年前（二叠末）彻底消失，它称霸海洋近三亿年。（见 Fortey《Trilobite!》）"] },
+
+    { id:117, place:"放大镜看三叶虫头部，一排排小六角格子", ph:"三叶虫的眼由方解石晶体当透镜——动物界绝无仅有的'矿物眼'",
+      t:["放大镜看某些三叶虫的头部，会看到一排排小六角格子，那是它的眼睛。怪在：这眼睛的'晶状体'不是软的，是一颗颗<b>方解石</b>（calcite）晶体——整只眼就是用矿物直接长出来的，动物界前无古人后无来者。",
+         "方解石硬、能原样保存成化石，所以我们今天还能数清它几亿年前的'像素'。有的种类眼睛鼓成塔、有的长柄、有的干脆没眼（钻泥里不需要）。三叶虫用石头当镜头看世界，化石里替我们留住了最早的'眼睛档案'。（源自 Fortey 对三叶虫眼的研究）"] },
+
+    { id:118, place:"加拿大落基山高处，一层黑页岩敲开", ph:"布尔吉斯页岩：5.08亿年，软体也保存，寒武大爆发的'全景照'",
+      t:["加拿大落基山高处，一层黑页岩敲开，不只有壳——连肠子、眼睛、甚至神经的印痕都在。这叫<b>布尔吉斯页岩</b>（Burgess Shale），约5.08亿年前（中寒武世），被海底泥崩快速埋到无氧环境，软肉没烂掉，原样压成了碳膜。",
+         "1909年沃尔科特（Walcott）骑马撞见它，后来挖出六万多件标本；七八十年代重新研究，发现一堆'不认识'的怪生物（怪诞虫、欧巴宾海蝎五只眼）。它是寒武大爆发的'全景照'——证明那时身体的花样比今天野得多。（Gould《奇妙的生命》讲的就是它）"] },
+
+    { id:119, place:"云南澄江那带灰绿薄层里，5.18亿年前的动物", ph:"澄江生物群：5.18亿年，中国云南，比布尔吉斯还早，软体保存",
+      t:["云南澄江那带灰绿薄层里，5.18亿年前的动物连软体都留着：抚仙湖虫带柄的眼、昆明鱼一对黑点似的单透镜眼——那是已知最早的脊椎动物。这叫<b>澄江生物群</b>（Chengjiang Biota），比布尔吉斯还早约千万年。",
+         "它和布尔吉斯一样，是被快速埋进细泥、缺氧保下的'特异埋藏'。从海绵到脊索动物一应俱全，是寒武大爆发的东方窗口。中国的这块化石地，把'眼睛和脊椎从哪来'的追问，往前推了一大截。"] },
+
+    { id:120, place:"比寒武纪还早的岩石，印着像水母的浅浮雕", ph:"埃迪卡拉生物群：6.35–5.41亿年，先寒武大爆发，软体印痕",
+      t:["比寒武纪还早，6.35到5.41亿年前的岩石里，常印着些像水母、像羽毛、像压扁气球的浅浮雕——没有壳、没有骨，软趴趴的印痕。这是<b>埃迪卡拉生物群</b>（Ediacaran biota），寒武大爆发之前的'实验品'。",
+         "它们多数身份成谜（是不是动物都有争议），却已经会动、会捕食、会占据不同水层。冰期刚退、氧往上爬，这批'胖软体'先登场，给后来的寒武 explosion 铺了路。寒武底界就是用它们之后出现的第一批洞穴化石划的。"] },
+
+    { id:121, place:"寒武纪一开场，地层里的动物突然'什么都有'", ph:"寒武纪大爆发：约5.41亿年起，短时间内冒出大多动物门类，眼睛军备竞赛",
+      t:["寒武纪一开场（约5.41亿年前），地层里的动物突然'什么都有'了：带壳的、带眼的、带硬甲的，大多现生动物门类在极短时间（有人说短到一两千万年）里一起冒头。这就是<b>寒武纪大爆发</b>（Cambrian explosion）。",
+         "推手之一是'眼睛军备竞赛'：一旦有谁先长出能感光的眼点，捕食和反捕食压力就逼着大家都得升级，眼睛、甲壳、快游成套出现。之前埃迪卡拉那批软体大多没扛住这波，成了'被淘汰的实验'。一口气冒出这么多身体蓝图，地球算是开了次'生命设计大赛'。"] },
+
+    { id:122, place:"布尔吉斯页岩里有个一米长、带刺抓肢的大块头", ph:"奇虾：寒武顶级捕食者，1米长，带柄复眼，抓肢带刺",
+      t:["布尔吉斯页岩里有个吓人的大块头：身体一米长，前端一对带刺的抓肢，头上两只带柄的大复眼。这叫<b>奇虾</b>（Anomalocaris），寒武海洋的'顶级捕食者'，比三叶虫大得多。",
+         "它的嘴是个环形'菠萝圈'，以前被误认成水母、被误拼成好几种动物，后来才拼回原样。它专吃三叶虫之类有甲的小动物，是寒武海里第一个'真正的猎手'。看见它，就知道5亿年前的海已经很'卷'了。"] },
+
+    { id:123, place:"显微镜下，灰岩酸泡出的残渣里有'小尖牙'", ph:"牙形石：磷酸盐'小牙'微化石，古生代—三叠的生物地层标准，还能当温度计",
+      t:["显微镜下，灰岩酸泡出来的残渣里常有一堆0.2–6毫米、像小尖牙/小梳子的透明物件。这是<b>牙形石</b>（conodont），动物身子是软的、只这'牙'是磷酸钙矿化的，所以从寒武到三叠（约5亿–2亿年前）只留下这些'牙'。",
+         "它们演化快、分布广，是古生代到三叠纪地层的'标准时钟'——同一物种南北半球都能对上，靠它把地层切成几百个带。更妙：这磷酸盐受热会变色，颜色越深说明岩石被烤得越热，于是它还能当石油勘探的'古温度计'。"] },
+
+    { id:124, place:"黑页岩劈开，一条条银灰色'锯齿'印在面上", ph:"笔石：像铅笔写在黑页岩上的'锯齿'，奥陶—志留的标准化石",
+      t:["黑页岩劈开，常有一条条银灰色的'锯齿'或'小树枝'印在面上，像谁拿铅笔在石头上瞎划。这是<b>笔石</b>（graptolite），一群浮游的群体动物（半索动物），每条'锯齿'其实是个小杯子，住着一只小小软体。",
+         "它们漂在远洋，死了一沉就是全球分布；又演化飞快（新种常活不到一百万年），成了奥陶纪、志留纪地层的'金标准'。地质队在野外劈黑页岩，看见笔石就能报出大致年代。一根'铅笔划痕'，是几亿年前漂在海上的一群小房客。"] },
+
+    { id:125, place:"泥盆纪浅海里，一种6–9米的'坦克鱼'", ph:"盾皮鱼（邓氏鱼）：泥盆纪装甲鱼，没牙，上下颌是能自磨的骨板",
+      t:["泥盆纪（约3.6亿年前）的浅海里，有种长达6–9米的'坦克鱼'：前半身包着几厘米厚的骨甲，嘴里没牙，取而代之的是上下颌边缘两排锋利的骨板，像铡刀还会自己磨快。这是<b>盾皮鱼</b>里的明星<b>邓氏鱼</b>（Dunkleosteus）。",
+         "它张嘴快到1/50秒，靠吸力把猎物拽进嘴，咬合力堪比巨鳄，是泥盆纪海洋第一个'百兽之王'。可惜泥盆纪末大灭绝把整个盾皮鱼纲全灭了，没留一个后代——今天鱼类的亲戚里，早没它的位置。"] },
+
+    { id:126, place:"北极加拿大河相岩层里，一种怪鱼胸鳍长出肩肘腕骨", ph:"提塔利克：3.75亿年'鱼鳍变四肢'的过渡化石，能撑起身子爬上滩",
+      t:["北极加拿大3.75亿年前的河相岩层里，挖出一种怪鱼：浑身鳞片、有鳃，头却扁得像鳄鱼，最绝的是胸鳍里长出了肩、肘、腕的骨头，能像腿一样把身子支起来。这叫<b>提塔利克</b>（Tiktaalik），'鱼-四足'之间的'鱼足兽'。",
+         "它生活在浅水滩涂，偶尔用原鳍撑着爬上泥岸。它之前是鱼（潘氏鱼），之后是真正上岸的四足类（鱼石螈），它正好卡在中间。看见它，就像看见我们每条胳膊每条腿的'出厂设置'——骨头从鳍里长出来的那一刻。"] },
+
+    { id:127, place:"石炭纪煤系里，树皮印满菱形叶疤像鳄鱼皮", ph:"鳞木：石炭纪煤 swamp 的'鳞皮大树'，高40–50米，却不是真木头",
+      t:["石炭纪煤系里常找到一种树皮印模：满身菱形叶疤，像鳄鱼皮又像轮胎纹。这是<b>鳞木</b>（Lepidodendron），石炭纪沼泽的'参天大树'，能长到40–50米高，可它压根不是今天的树——没多少真木，靠厚厚的皮撑着，更像棵巨型草。",
+         "它用孢子繁殖（不是种子），死后齐刷刷倒进沼泽，缺氧烂不掉，压成泥炭再变成煤。今天你烧的每一块石炭，很多就是当年这片鳞木森林的尸体。地下那张放射状'根痕'（Stigmaria）也是它的，是煤系地层最常见的植物化石之一。"] },
+
+    { id:128, place:"早二叠世黑页岩，南美和南非各挖出同一种小爬宠", ph:"中龙：早二叠世淡水小爬行动物，只在南美+南非，大陆漂移的铁证",
+      t:["早二叠世（约2.9–2.7亿年前）的黑色页岩里，南美和南非各挖出一种一米长、细长嘴、满口细针牙的小水生爬行动物<b>中龙</b>（Mesosaurus）。它住在淡水湖沼，根本跨不过开阔咸海。",
+         "可它偏偏同时出现在如今隔着大西洋的两块大陆上——唯一解释：那时南美和非洲还连在一起（同属冈瓦纳）。魏格纳当年就拿中龙当'大陆漂移'的最早硬证据之一。一只淡水小爬宠，成了撬动整个板块学说的支点。"] },
+
+    { id:129, place:"二叠纪地层，南半球几块大陆都挖出同一种'舌头叶'", ph:"舌羊齿：二叠纪种子蕨，叶形像舌头，南半球各大陆都有，冈瓦纳拼图证据",
+      t:["二叠纪的地层里，南半球好几块大陆（南美、非洲、印度、澳洲、南极）都挖出同一种叶子：形状像舌头、有网状叶脉、是某种种子蕨的。这叫<b>舌羊齿</b>（Glossopteris），能长到二三十米高。",
+         "同一种树，今天隔着大洋的各大陆全有，说明当年它们是一家（冈瓦纳超大陆），后来才裂开漂走。和128中龙一样，舌羊齿也是魏格纳拼回古大陆的'拼图块'。一片叶子，证明大陆会搬家。"] },
+
+    { id:130, place:"早三叠世岩层里，突然到处都是同一种猪一般大的爬宠", ph:"水龙兽：二叠末大灭绝后'灾难物种'，三叠纪初全球遍布，铲状獠牙",
+      t:["二叠末那场'大死亡'之后，早三叠世的岩层里突然到处都是同一种猪一般大、嘴上有对铲状獠牙的似哺乳爬行动物<b>水龙兽</b>（Lystrosaurus）。别的几乎死光，它却铺满全球。",
+         "这种灭绝后爆满、独占废墟的物种，叫'灾难物种'（disaster taxon）。它也是冈瓦纳—劳亚拼接的证据之一（南极、印度、南非都有）。看它密密麻麻的化石，就像读到大灭绝后地球'重启动'的第一行字。"] },
+
+    { id:131, place:"地层里一道清晰的'断崖'，下面古生代繁盛、上面全换面孔", ph:"二叠末大灭绝（Great Dying）：2.52亿年前，海洋灭96%、陆地脊椎灭70%，史上最狠",
+      t:["地层里有一道清晰的'断崖'：下面还是繁盛的古生代海洋（珊瑚、腕足、三叶虫满地），上面突然全换了一批陌生的面孔。这是<b>二叠末大灭绝</b>（Great Dying），约2.52亿年前，古生代到此结束。",
+         "它灭了约96%的海洋物种、70%的陆地脊椎动物，比恐龙那次狠得多。海里缺氧、酸化和升温一起上，生态系统花了上千万年才缓过来。它是地球生命史上最彻底的一次'格式化'。"] },
+
+    { id:132, place:"翻开二叠—三叠交界，西伯利亚地下压着几百万km³玄武岩", ph:"西伯利亚暗色岩：约2.52亿年前洪水玄武岩，~400万km³，喷出CO₂/甲烷触发大灭绝",
+      t:["翻开二叠—三叠交界，西伯利亚那片地下压着厚达几百万立方公里的玄武岩——这是<b>西伯利亚暗色岩</b>（Siberian Traps），约2.52亿年前短时间（不到百万年）喷出的'洪水玄武岩'。",
+         "岩浆不光自己涌，还烫穿了含碳的地层，把巨量 CO₂ 和甲烷一股脑喷进大气，全球骤暖、海洋缺氧酸化——正对上二叠末大灭绝。今天那片台阶状高原，就是当年这场'地球放屁'凝成的石头。火山，也能改写生命史。"] },
+
+    { id:133, place:"把今天各大洲沿契合海岸线往回推，拼成一块巨陆", ph:"泛大陆（Pangaea）：约3.35–1.75亿年前所有大陆拼一块，后又裂解成今天模样",
+      t:["把今天各大洲沿着契合的海岸线往回推，会在约3.35亿年前拼成一块巨陆，被一圈叫泛大洋（Panthalassa）的海洋包着。这叫<b>泛大陆</b>（Pangaea，希腊语'全地球'）。",
+         "它约1.75亿年前（侏罗纪）开始裂：先分成北劳亚、南冈瓦纳，再慢慢漂成今天的七大洲。拼合时浅海缩水、内部变沙漠，可能还帮着引爆了二叠末灭绝；裂解后海岸线变长、物种隔离，生物多样性反而上去了。我们脚下的地图，是被板块慢慢揉碎又重拼过的。"] },
+
+    { id:134, place:"侏罗纪浅海里，挖出像海豚又像鱼龙的形状，肚里还怀着宝宝", ph:"鱼龙：2.5–0.9亿年的海生爬行类，海豚形、胎生、大眼，和恐龙同期但不是恐龙",
+      t:["侏罗纪浅海里，常挖出像海豚又像鱼龙的形状：长吻满口尖牙、四肢变成桨、尾巴下弯成垂直尾鳍，有的肚子里还怀着小宝宝。这是<b>鱼龙</b>（Ichthyosaur），'鱼蜥'，和恐龙同期却不是恐龙，是回到海里住的爬行类。",
+         "它从约2.5亿年前（二叠末之后不久）出现，到约0.9亿年前灭绝，眼睛大得吓人（有的直径25厘米以上，深潜用），而且<b>胎生</b>——在海里直接生崽，搁浅就完蛋。它和鲸海豚是'趋同进化'：陆地祖先回海，各自长成了差不多的流线型。"] },
+
+    { id:135, place:"灰岩里嵌着一枚枚螺旋的、壳面有肋纹的'化石蜗牛'", ph:"菊石：中生代螺旋壳头足类，演化快、分布广，划分侏罗白垩的'标准钟'，K-Pg随恐龙灭",
+      t:["许多灰岩里嵌着一枚枚螺旋的、壳面有美丽肋纹的'化石蜗牛'——其实不是蜗牛，是头足类<b>菊石</b>（ammonite），和章鱼乌贼远亲。它肚子里的隔板在壳面留下一条条折线（缝合线），花样多到能分种。",
+         "它从古生代晚期一直到白垩纪末，演化快、漂得远，是中生代地层的'标准钟'——哪一层的菊石啥样，就能定到哪段。可6500万年前那颗陨石一来，它和恐龙一起没了。一枚螺旋壳，替我们数过中生代的海流年月。"] },
+
+    { id:136, place:"古生代灰岩里，像牛角、截面放射状'花瓣'的化石", ph:"四射珊瑚（rugose coral）：古生代单体/复体珊瑚，辐射状隔壁，造古生代礁",
+      t:["古生代灰岩里那种像牛角、截面放射状'花瓣'的化石，是<b>四射珊瑚</b>（rugose coral，也叫'皱珊瑚'）。它单体像牛角、也能长成复体，内部从中心向四周长出'隔壁'，磨平看像朵花。",
+         "它和今天六射的石珊瑚不是一家，却一样和虫黄藻搭伙、一样造礁，古生代浅海大堡礁多半它建的。二叠末大灭绝把它整纲灭了，今天的珊瑚是后来另起炉灶的'新一代'。一块珊瑚石，是古生代海床的残柱。"] },
+
+    { id:137, place:"海滩上那种两瓣壳，两瓣大小不一样、对称面是中线", ph:"腕足类（brachiopod）：两壳不等、肉茎固着，'撞脸贝壳实为另类'，古生代极盛",
+      t:["海滩上那种两瓣壳，多数人当贝类，可有一种'壳'两瓣大小不一样、对称面是中线而不是左右——这是<b>腕足类</b>（brachiopod）。它用一根肉茎把自己钉在海底，靠触手扇食浮游物，和双壳贝是'撞脸的远亲'。",
+         "古生代海里它是主角，品种多到数不清；二叠末大灭绝它伤亡惨重，虽然没全灭、今天还有活种，但早已退居冷门。捡到一枚'小贝壳'，先看看两瓣是不是对称——很可能你手里是几亿年前的腕足，不是贝。"] },
+
+    { id:138, place:"有种化石像一朵雕在石头上的百合花", ph:"海百合（crinoid）：看着像花其实是动物，长茎固着，茎节化石叫'石莲'",
+      t:["有种化石像一朵雕在石头上的百合花，其实不是植物——是<b>海百合</b>（crinoid），一类用长茎固着在海底、顶端张着腕'滤食'的棘皮动物，和海星海胆一家。活的现在深海还有，古生代浅海却密密麻麻。",
+         "它死后那根一节节的茎最容易留下来，圆圆扁扁像小钱币/小莲花，俗名'石莲'。古生代灰岩里常成层出现，一敲一把。一朵'石头花'，是几亿年前海里站着的一根长茎动物。"] },
+
+    { id:139, place:"二叠—三叠交界的骨骼化石，长着像狗一样的下巴", ph:"犬齿兽（兽孔类）：二叠—三叠似哺乳爬行动物，哺乳动物近祖，南美非洲都有",
+      t:["二叠—三叠交界的一些骨骼化石，长着像狗一样的下巴和牙齿，既像爬行动物又像早期哺乳动物——这是<b>兽孔类</b>（therapsid）里的<b>犬齿兽</b>（Cynognathus，字面'狗颌'）。它是我们哺乳动物一脉的近祖。",
+         "犬齿兽和128中龙、129舌羊齿一样，只在南美和非洲出现，是冈瓦纳/泛大陆拼合的又一拼图块。从它身上能追踪到毛发、恒温、中耳骨的来历——某种意义上，你我的'出厂设定'里，有它的一份。一个'狗下巴'，连着哺乳动物的根。"] },
+
+    { id:140, place:"有些灰岩里躺着一根根直的、带横隔的锥形'石角'", ph:"直角石（Orthoceras/鹦鹉螺类）：奥陶纪直壳头足类，锥壳带气室，常见灰岩化石",
+      t:["有些灰岩里躺着一根根直的、带一道道横隔的锥形'石角'——这是<b>直角石</b>（Orthoceras 一类，属鹦鹉螺类头足动物）。它壳直、里头一格格气室用来调浮力，活着时软体躲在宽的一头，靠触手抓食。",
+         "奥陶纪海里它多得像今天的乌贼，壳堆成厚层灰岩（欧洲、北美、中国都有名产地）。它和后来卷成螺旋的菊石是亲戚，一个直一个卷，却都是头足类'用气室当救生衣'的老祖宗。一根石角，是奥陶纪海的'直筒潜艇'遗骸。"] },
+
+    { id:141, place:"站在苏必利尔湖畔，满眼光秃秃的灰红石头和成千上万个湖", ph:"加拿大地盾（Canadian Shield）：北美最古老基底，前寒武岩裸露，环哈得逊湾，冰川磨光薄土",
+      t:["站在苏必利尔湖畔，满眼是光秃秃的灰红石头，中间嵌着成千上万个湖，土薄得几乎盖不住石头——这片叫<b>加拿大地盾</b>（Canadian Shield）。它绕着哈得逊湾铺开，是地球最大的前寒武岩石露头。",
+         "地盾年龄约 42.8 亿年，是北美大陆的'老芯'，面积 800 万 km²，海拔才 300–610 米。几亿年的山早被磨平，最后一下是冰川：冰盖像砂纸把土刮走、把盆地刨成湖。今天这副'秃山多湖'的模样，多半是冰给雕的。"] },
+
+    { id:142, place:"开车穿过宾州到田纳西，一道道平行山岭和谷地，不高却绵延上千公里", ph:"阿巴拉契亚（Appalachian）：古洋 Iapetus 闭合三次造山，今丘陵，曾高如喜马拉雅",
+      t:["开车穿过宾州到田纳西，碰到的是一道道平行山岭夹着谷地，不高却绵延——这是<b>阿巴拉契亚</b>。它看着温顺，其实底下压着三次造山的伤疤。",
+         "古大洋 Iapetus 俯冲闭合，先后撞出塔康（约 4.4 亿年）、阿卡迪亚（约 3.6 亿年）、阿勒格尼（约 3 亿–2.5 亿年）三次造山，山脉曾高得像今天的阿尔卑斯或喜马拉雅。后来被侵蚀成准平原，新生代再抬升，才成现在这道道丘陵。一座'老山脉'，是古洋死去的墓碑。"] },
+
+    { id:143, place:"从中部大平原往西开，地平线一望无际，路边崖壁却是水平整齐的岩层", ph:"内陆平原/大平原：西边山脉剥蚀物填平的巨厚沉积，水平岩层",
+      t:["从中部大平原往西开，地平线一望无际。路边崖壁切开看，是一层层水平整齐的砂岩页岩——这是<b>内陆平原</b>，地下沉着几公里厚的沉积。",
+         "西边落基山一类的高山抬升后，碎屑被河搬来东边堆成巨厚沉积（当年的 Catskill 三角洲厚达 1200 米）。今天的'大平原'平，是因为底下垫了厚厚一层从西边山上剥下来的土石。地平线的平坦，是远处群山慢慢'化'进来的结果。"] },
+
+    { id:144, place:"落基山前，看到的是花岗岩巨块构成的山核，不是火山锥", ph:"落基山（Rocky Mts）：俯冲带地壳缩短逆冲抬升的非火山山脉，前寒武基底出露",
+      t:["落基山前抬头，山核是灰色花岗岩巨块，不是锥形火山——这提醒你：<b>落基山</b>不是火山，是'挤'出来的。",
+         "约 1.7 亿到 4000 万年前，法拉隆板块俯冲到北美之下，地壳被横向挤压、前寒武老基底被逆冲断层铲起抬升成块断山。它和西侧俯冲带火山弧（如安第斯）同源不同相：一个熔、一个挤。一座山，是板块'捏'出来的褶皱。"] },
+
+    { id:145, place:"内华达开车，一道道南北向山脉夹着平谷，从天上像指纹", ph:"盆地山脉省（Basin and Range）：地壳东西拉伸，地垒地堑，约 17Ma 起",
+      t:["内华达开车，窗外是一道道南北向山脉夹着平谷，从卫星看像指纹——这是<b>盆地山脉省</b>（Basin and Range）。",
+         "约 1700 万年前起，地壳被东西向拉开、变薄（从约 40 公里薄到 25–30 公里），断层把地块撕成'地垒'（horst，隆起的山）和'地堑'（graben，陷下的谷）。拉伸率最高能到 100%——大陆在这里被活活拉宽了一倍。一排排山和谷，是地壳被扯开的裂口。"] },
+
+    { id:146, place:"加州卡里索平原，一条笔直沟槽穿过草地，两边岩层明显错开", ph:"圣安德烈斯断层（San Andreas）：转换边界，右旋走滑，太平洋/北美板块",
+      t:["加州卡里索平原上，一条笔直沟槽切开草地，本该连续的岩层被它拧着错开——这是<b>圣安德烈斯断层</b>。1906 年旧金山地震，它一下错动 6.4 米。",
+         "它是转换断层：太平洋板块贴着北美板块，沿这条西北走向的缝水平错动（右旋走滑），滑移率约 3.5 厘米/年，全长 1200 公里。洛杉矶和旧金山正被它一点点'平移'开。一条线，是两片大陆在 sideways 互蹭的摩擦面。"] },
+
+    { id:147, place:"地图上北美中心那块稳定古老、几亿年没大震的硬核", ph:"克拉通（craton）：大陆稳定古核，北美 Laurentia，长期不动",
+      t:["看北美地质图，中心那一大块颜色老、少地震、稳如磐石——这是<b>克拉通</b>（craton），大陆最古老的'硬核'。北美这块叫 Laurentia。",
+         "克拉通由最古老的结晶基底（如 141 加拿大地盾露头）加稳定盖层组成，几亿年不被俯冲也不被强烈改造。今天大陆的边缘是一圈圈后来拼上的新岩带，而中心这块，是'祖宗级'的地盘。"] },
+
+    { id:148, place:"造山带里偶尔露出一片暗绿、带枕状熔岩和蛇纹岩的'洋壳残片'", ph:"缝合线（suture）：消失的古洋闭合处，造山带里找洋壳残片认边界",
+      t:["在造山带里走，偶尔撞见一片暗绿、滑溜溜蛇纹岩加枕状熔岩，和两边灰岩花岗岩都不像——这是被挤扁的<b>洋壳残片</b>，标出了一条<b>缝合线</b>。",
+         "两大陆碰撞时，中间的古洋被挤没了，只留这点残片在缝合线上。沿着它，能认出大陆是'在哪条缝上拼起来的'。96 的蛇绿岩、97 的双变质带，都是缝合线附近会冒出来的证据。一道暗绿岩带，是古洋的临终遗照。"] },
+
+    { id:149, place:"北美西海岸那些'来历不明'的岩块，化石和年龄跟内陆对不上", ph:"地体（terrane）：远洋漂移拼贴到大陆边缘的外来地块，北美西缘拼了一串",
+      t:["北美西海岸有些岩块，化石群、年龄都和内陆对不上，像被人缝上来的补丁——地质学叫<b>地体</b>（terrane，外来地块）。",
+         "它们原本是独立漂在洋里的碎块，沿俯冲带被一点点'贴'到大陆边缘（accretion）。从加州到阿拉斯加，北美西缘就是一串这样拼起来的地体。大陆不是整块出生的，是一块块'缝补'长大的。"] },
+
+    { id:150, place:"黄石公园地热沸腾、间歇泉喷，脚下竟是个巨大的破火山口", ph:"黄石热点（Yellowstone hotspot）：地幔柱上拱，超级火山，上次喷发 64 万年前",
+      t:["黄石公园里间歇泉乱喷、地面自己每年还往上拱 7.5 厘米——脚下是个巨大的破火山口。这不是普通火山，是<b>黄石热点</b>。",
+         "热点在板块下方约 400 公里深处的固定熔源（地幔柱）。它曾三次超级喷发：210 万、130 万、64 万年前，最近一次（Lava Creek）喷出超 1000 km³ 物质、塌成 45×85 公里的坑。北美板块向西移动，正从这条热柱上缓缓碾过。一处喷泉，是地球深处一支'喷灯'的火苗。"] },
+
+    { id:151, place:"瑞典海边老码头，年年离海更远，陆地自己往上涨", ph:"地壳均衡（isostasy）：地壳像浮冰浮在软流圈上，加载卸载会升降",
+      t:["瑞典海边，百年前的码头如今离海几百米，陆地自己每年往上长近 1 厘米——这是<b>地壳均衡</b>在动。冰期几公里厚的冰曾把地壳压下去几百米，冰一退，它慢慢弹回。",
+         "道理像木块浮水：地壳浮在下方可塑的软流圈上，压重就沉、卸重就升。斯堪的纳维亚回弹中心约 1 厘米/年，总回弹能到 400 米，还得再弹几千年。一片海岸，是大地卸掉重担后的'深呼吸'。"] },
+
+    { id:152, place:"脚下是坚硬岩石，可想到地下上百公里处，岩石却能慢慢流动", ph:"岩石圈/软流圈（lithosphere/asthenosphere）：刚性盖层 vs 可塑流动层",
+      t:["脚下的岩石硬得敲不动，但往下百来公里，同样叫'岩石'的东西却能像极稠的沥青慢慢蠕动——这是<b>岩石圈</b>和<b>软流圈</b>的分界。",
+         "岩石圈是顶部又冷又硬的壳（地壳加最上地幔），软流圈是它下面高温、能缓慢蠕变的层。板块漂移、冰后回弹、造山均衡，全靠这层'会流的石头'在底下托着。硬的盖、软的垫，地球表面才动得起来。"] },
+
+    { id:153, place:"夏威夷、冰岛这种远离板块边界却狂喷火山的地方", ph:"地幔柱（mantle plume）：深部热柱上涌，不在板块边界的火山",
+      t:["夏威夷孤零零漂在太平洋中央却座座火山，冰岛在洋中脊上却厚得出奇——这些'不按边界出牌'的火山，多半是<b>地幔柱</b>捣的鬼。",
+         "地幔柱是源自地幔深处（可到上千公里）的一柱热物质上涌：柱头蘑菇状摊开能引发洪流玄武岩，柱尾则长期'喂'出一个固定热点（153 同源于 150 黄石）。它和板块边界的火山是两码事——一个是板块缝里冒，一个是地心递上来的热。"] },
+
+    { id:154, place:"洋中脊被一条条横切的断层错开，错动好像只在脊与脊之间发生", ph:"转换断层（transform fault）：错断洋中脊的特有断层，与走滑不同",
+      t:["看洋中脊地图，它总被一条条横切的断层错成一段段——这是<b>转换断层</b>。怪在：断层两盘只在两段洋脊之间相对滑动，脊外侧反而一起朝同方向漂。",
+         "它专门连接两段离散或俯冲边界，是板块边界的'转换开关'。和 146 圣安德烈斯那种切在陆地上的板块走滑边界不同，转换断层的地震只发生在脊间那段。一条横缝，是洋脊被拧断的接缝。"] },
+
+    { id:155, place:"西太平洋一排弧形火山岛，旁边海底地震一个接一个", ph:"岛弧（island arc）：洋-洋俯冲形成的火山岛链，如日本、阿留申",
+      t:["西太平洋上，一串弧形排列的火山岛，旁边海底深震频发——这是<b>岛弧</b>。日本、阿留申都是典型。",
+         "一片大洋板块俯冲到另一片大洋板块之下，下插板片脱水，诱发上覆地幔熔融，岩浆在俯冲带正上方冒出来，排成一道弧形火山链。它和 165 大陆弧同源不同景：一个在海里的岛上，一个在陆缘内侧。一排岛，是海底往地里钻时呛出的火。"] },
+
+    { id:156, place:"海沟旁边，沉积物像被铲子刮下来，堆成歪斜褶皱的泥包", ph:"增生楔（accretionary wedge）：海沟处大洋沉积物被刮落堆到陆缘",
+      t:["到海沟边上看，内壁一堆堆歪斜褶皱的沉积物，像被铲车从洋底刮上来堆那儿的——这叫<b>增生楔</b>（accretionary wedge）。",
+         "俯冲时，洋壳驮着的沉积物和表层被上盘'刮削'（off-scraping）一点点堆叠到大陆边缘，陆壳就这样一点点长宽。它是大陆生长的两条路之一（另一条是 160 岩浆添加）。一摞歪泥，是大陆'长肉'的边角料。"] },
+
+    { id:157, place:"有些大陆边缘没长肉反而'缩水'，海沟一个劲往陆地方向退", ph:"俯冲侵蚀（subduction erosion）：海沟后撤啃食陆缘，陆壳反而变薄",
+      t:["多数活动大陆边缘在长肉，可有些反而'缩水'：海沟不断往陆地方向退，把陆缘一块块啃掉——这叫<b>俯冲侵蚀</b>（subduction erosion）。",
+         "俯冲时上盘不是被刮积、而是被下插板块直接'带走'物质，陆缘因此缩短变薄。它和 156 增生正好相反，是陆壳丢失的途径。大陆一边靠地体拼贴长大，一边也可能被海沟悄悄吃掉。"] },
+
+    { id:158, place:"喜马拉雅、青藏高原，山高得离谱，原来地下还插着几十公里'山根'", ph:"造山带根（orogenic root）：碰撞造山地壳巨厚，按均衡插进地幔",
+      t:["喜马拉雅和青藏高原高得反常，秘密在地下：青藏高原地壳厚到 70 公里，山下面还拖着一根深深插进地幔的'山根'——这是<b>造山带根</b>。",
+         "陆-陆碰撞把地壳挤厚，按 151 均衡原理，厚地壳像冰山，得多深的根插进软流圈才浮得稳。山越高，根越深。喜马拉雅、青藏是活生生的例子：你看到的高，只是浮出地面的尖。"] },
+
+    { id:159, place:"同样叫'地壳'，海底那层和脚下大陆这层，根本不是一种东西", ph:"洋壳/陆壳（oceanic/continental crust）：玄武薄重年轻 vs 花岗厚轻古老",
+      t:["同样叫地壳，海底黑玄武岩那层薄得很，陆上花岗岩却厚得多；更怪的是：洋底找不到老于约 2 亿年的岩石，陆上却有 40 亿年的老伙计——这是<b>洋壳</b>和<b>陆壳</b>。",
+         "洋壳是玄武质，厚约 7 公里、密度约 3.0、年轻（<2 亿年，不停在洋中脊生、海沟里亡）；陆壳是花岗质，厚约 35 公里（山下到 70）、密度约 2.7、能老到 40 亿年。正是这点密度差，让洋壳乖乖俯冲、陆壳高高浮着。两兄弟，一个勤快轮换、一个恋家不走。"] },
+
+    { id:160, place:"大陆不是天生这么大，边上一圈圈比中心新的岩带，像年轮往外长", ph:"大陆生长（continental growth）：靠地体拼贴+岩浆弧增生，陆壳越变越大",
+      t:["看大陆地质图，越靠中心越老、越往边缘越新，像树木年轮一圈圈往外长——这是<b>大陆生长</b>。",
+         "陆壳靠岛弧/地体拼贴（149、156）和俯冲带岩浆添加逐步变大；加拿大地盾本身也是一块块拼起来的。但它也会因 157 俯冲侵蚀而丢失。长大与缩小两头拉扯，才雕出现在大陆的轮廓。"] },
+
+    { id:161, place:"苏必利尔湖本身，竟是一条 11 亿年前没撕开的大陆裂痕", ph:"中大陆裂谷（Midcontinent Rift）：1.1Ga 北美试图裂开却失败的'化石裂谷'",
+      t:["苏必利尔湖这汪水，底下是一条 11 亿年前的裂谷。湖岸黑色火山悬崖，就是当年裂谷里灌的玄武岩——这是<b>中大陆裂谷</b>（Midcontinent Rift）。",
+         "约 11 亿年前北美克拉通试图撕开，喷了巨厚玄武岩、地垒下陷，却没撕成洋盆就停了（fail），留下一条 3000 公里长、已'愈合'的裂谷。湖盆、铜矿都是它给的。一条没成功的裂缝，是大自然留下的'未遂分手'现场。"] },
+
+    { id:162, place:"地图上有裂谷像三条胳膊在一个点交汇，比如东非那片三叉", ph:"三连点（triple junction）：三条 rift 交于一点，常一成功两失败（如东非）",
+      t:["裂谷起步时常是三条胳膊在一个点交汇，呈'丫'字——这叫<b>三连点</b>（triple junction）。东非裂谷+红海+亚丁湾就是活生生的丫字，161 中大陆裂谷三臂也曾汇于苏必利尔。",
+         "按力学，三臂里通常'一成功、两失败'：最终多剩一个成熟洋盆，另两臂冷却僵死。东非/红海正在演示这个过程，而 161 是僵死的那类。一个丫字路口，决定了大陆是裂开还是 merely 裂着。"] },
+
+    { id:163, place:"太平洋底一条 6000 公里长的海山链，年龄从东南往西北越来越老", ph:"热点轨迹（hotspot track）：板块过固定热点，留下年龄递进的火山链",
+      t:["太平洋底藏着一条 6000 公里长的海山链，东南端夏威夷还活着，往西北一路变老，到 8200 万年前的皇帝海山——这是<b>热点轨迹</b>。中间约 4700 万年前还拐了个约 60°的弯。",
+         "板块在固定热点上移动，火山挨个生成又被带走，排成年龄递进的链；那个弯，记下了太平洋板块约 4700 万年前的一次转向。它是证明'板块会动、且动法会变'的关键证据（150 黄石、153 地幔柱都和它同源）。一条海底长链，是板块的行车记录仪。"] },
+
+    { id:164, place:"东非大裂谷，大地像被指甲划开，中间陷下去还冒热气（续 98）", ph:"大陆裂谷（continental rift）：陆内张裂下陷，是新生洋盆的'胚胎'（红海式）",
+      t:["东非大裂谷里，大地像被指甲划开后中间陷下去，裂谷湖一串、火山还冒热气——这是<b>大陆裂谷</b>（在 98 单看现象，这里看它'要变成什么'）。",
+         "陆内张裂使地壳变薄下陷成地堑，若持续就裂成新洋盆：红海就是正在'毕业'的裂谷（已张开成窄海）。161 中大陆裂谷是没毕业的，东非是还在读的。一条地堑，是下一个大洋的胚胎。"] },
+
+    { id:165, place:"安第斯那种紧贴海岸、内陆一侧的连绵火山带", ph:"大陆弧（continental arc）：洋壳俯冲到陆壳下诱发的火山带，如安第斯",
+      t:["南美西岸，紧贴海边、却偏向内陆一列火山连绵——这是<b>大陆弧</b>（continental arc），安第斯就是招牌。",
+         "大洋板块俯冲到大陆板块之下，脱水熔融的岩浆在陆缘内侧冒成火山带。它和 155 岛弧同源不同景：岛弧在海上、弧后是洋；大陆弧在陆上、弧后是陆（144 落基山的前身，也是这类活动大陆边缘的遗迹）。一列火山，是大陆脚边被海底'烫'出的疤。"] }
+  ];
+
+  function shuffle(a){ a=a.slice(); for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=a[i];a[i]=a[j];a[j]=t;} return a; }
+
+  var feedEl = document.getElementById("feed");
+  var sentinel = document.getElementById("sentinel");
+  var pool = [];        // 尚未露出的笔记（已乱序 = 随机推送顺序）
+  var rendered = [];     // 已露出笔记的 id
+  var BATCH = 5;         // 每次滑到底加几张
+  var INITIAL = 12;      // 首屏几张
+  var io = null;
+
+  function makePost(n){
+    var div = document.createElement("div");
+    div.className = "post";
+    div.id = "post-"+n.id;
+    var ps = n.t.map(function(x){return "<p>"+x+"</p>";}).join("");
+    div.innerHTML = '<div class="pbody">'
+      + '<div class="pmeta"><span class="name">我</span><span class="handle">@fieldnote</span>'
+      + '<span class="dot">·</span><span class="place">'+n.place+'</span></div>'
+      + '<div class="ptext">'+ps+'<p class="phinline">（图：'+n.ph+'）</p></div>'
+      + '</div>';
+    return div;
+  }
+
+  function appendNotes(count){
+    if(pool.length===0) return false;
+    var frag = document.createDocumentFragment();
+    for(var i=0;i<count && pool.length>0;i++){
+      var n = pool.shift();
+      rendered.push(n.id);
+      frag.appendChild(makePost(n));
+    }
+    feedEl.appendChild(frag);
+    return true;
+  }
+
+  function setEnd(){
+    sentinel.textContent = "— 已经到底了，共 "+rendered.length+" 篇 · 点「打乱顺序」重排 —";
+    sentinel.classList.add("end");
+    if(io) io.unobserve(sentinel);
+  }
+
+  function setupObserver(){
+    if(io) io.disconnect();
+    io = new IntersectionObserver(function(entries){
+      entries.forEach(function(e){
+        if(!e.isIntersecting) return;
+        if(pool.length===0){ setEnd(); return; }
+        appendNotes(BATCH);
+        if(pool.length===0){ setEnd(); }
+      });
+    }, { root:null, rootMargin:"320px 0px", threshold:0 });
+    io.observe(sentinel);
+  }
+
+  function renderFeed(){
+    pool = shuffle(notes);   // 重新乱序 = 重新随机推送顺序
+    rendered = [];
+    feedEl.innerHTML = "";
+    sentinel.classList.remove("end");
+    sentinel.textContent = "下滑加载更多…";
+    appendNotes(INITIAL);
+    setupObserver();
+    window.scrollTo(0,0);
+  }
+
+  function showLogic(){ document.getElementById("feedView").style.display="none"; document.getElementById("logic").style.display="block"; window.scrollTo(0,0); }
+  function showFeed(){ document.getElementById("logic").style.display="none"; document.getElementById("feedView").style.display="block"; }
+
+  function backTo(id){
+    showFeed();
+    // 目标笔记若还没露出，先从随机池里把它拉出来显示，再滚过去
+    if(rendered.indexOf(id)===-1 && pool.length){
+      for(var i=0;i<pool.length;i++){
+        if(pool[i].id===id){ var n=pool.splice(i,1)[0]; feedEl.appendChild(makePost(n)); rendered.push(id); break; }
+      }
+    }
+    requestAnimationFrame(function(){
+      var el = document.getElementById("post-"+id);
+      if(el){
+        var top = el.getBoundingClientRect().top + window.pageYOffset - 64;
+        window.scrollTo({ top: top, behavior:"smooth" });
+        el.style.transition = "background .3s";
+        el.style.background = "var(--hover)";
+        setTimeout(function(){ el.style.background = ""; }, 1500);
+      }
+    });
+  }
+
+  document.getElementById("toLogic").addEventListener("click", function(){
+    if(document.getElementById("logic").style.display==="block"){ showFeed(); }
+    else { showLogic(); }
+  });
+
+  renderFeed(); // 默认直接显示信息流，滑到底自动续 5 张
+</script>
+</body>
+</html>
