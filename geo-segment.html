@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>中国地理空间递归分割 · 演示原型</title>
+<style>
+  :root{
+    --bg:#0f1419; --panel:#171c24; --panel2:#1f2630; --line:#2a323d;
+    --text:#e6e9ee; --muted:#8b96a5; --accent:#4cc9f0; --warn:#ffd166;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--text);
+    font:13px/1.5 -apple-system,"PingFang SC","Microsoft YaHei",sans-serif}
+  header{padding:10px 16px;border-bottom:1px solid var(--line);background:var(--panel)}
+  header h1{margin:0;font-size:15px;font-weight:600}
+  header .sub{color:var(--muted);font-size:12px;margin-top:3px}
+  .layout{display:grid;grid-template-columns:240px 1fr 270px;gap:1px;background:var(--line);height:calc(100vh - 56px)}
+  .col{background:var(--panel);overflow:auto;padding:10px}
+  h2{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin:0 0 8px}
+  /* tree */
+  ul.tree{list-style:none;margin:0;padding-left:12px}
+  ul.tree.root{padding-left:0}
+  .node{cursor:pointer;padding:3px 6px;border-radius:4px;white-space:nowrap}
+  .node:hover{background:var(--panel2)}
+  .node.sel{background:#243447;color:var(--accent)}
+  .node .cnt{color:var(--muted);font-size:11px;margin-left:6px}
+  .node .cut{color:var(--muted);font-size:10px;display:block;margin-left:14px}
+  /* map */
+  #mapWrap{display:flex;flex-direction:column}
+  svg{width:100%;height:auto;background:#0b0f14;display:block}
+  rect.cell{cursor:pointer}
+  .mapbar{display:flex;gap:8px;align-items:center;padding:8px 4px;flex-wrap:wrap}
+  .mapbar select,.mapbar button{background:var(--panel2);color:var(--text);border:1px solid var(--line);border-radius:5px;padding:5px 8px;font-size:12px}
+  .mapbar button{cursor:pointer}
+  .mapbar button:hover{border-color:var(--accent)}
+  #status{color:var(--warn);min-height:16px;font-size:11px}
+  /* ctrl */
+  .field{margin-bottom:10px}
+  .field label{display:block;color:var(--muted);margin-bottom:4px;font-size:11px}
+  select,input[type=text]{width:100%;background:var(--panel2);color:var(--text);border:1px solid var(--line);border-radius:5px;padding:6px}
+  .grp{font-size:11px;color:var(--muted);padding:2px 0}
+  .grp.admin{color:#c98;margin-top:6px}
+  .grp.natural{color:#6ee7a8}
+  .grp.human{color:#f0b86e}
+  .legend{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+  .legend span{display:flex;align-items:center;gap:4px;font-size:11px}
+  .legend i{width:12px;height:12px;border-radius:2px;display:inline-block}
+  .stats{background:var(--panel2);border:1px solid var(--line);border-radius:6px;padding:8px;font-size:12px}
+  .stats b{color:var(--accent)}
+  .hint{color:var(--muted);font-size:11px;margin-top:8px;line-height:1.6}
+  .tag{display:inline-block;background:#2a1f12;color:#ffd166;border:1px solid #4a3a18;border-radius:4px;padding:1px 6px;font-size:10px;margin-left:6px}
+</style>
+</head>
+<body>
+<header>
+  <h1>中国地理空间递归分割 · 演示原型</h1>
+  <div class="sub">底图：中性经纬网格（非行政）｜切分顺序：自然类优先 → 人工类 → 行政类（最后手段）<span class="tag">示意数据</span></div>
+</header>
+
+<div class="layout">
+  <!-- 左：分割树 -->
+  <div class="col">
+    <h2>分割树</h2>
+    <div id="tree"></div>
+    <div class="hint">点击任意区块选中，再在右侧选标准继续下钻切割。</div>
+  </div>
+
+  <!-- 中：地图 -->
+  <div class="col" id="mapWrap">
+    <h2>地图（按当前视图着色）</h2>
+    <div class="mapbar">
+      <label style="color:var(--muted);font-size:11px">视图</label>
+      <select id="viewMode">
+        <option value="seg">区块配色（分割结果）</option>
+        <option value="attr">属性着色（choropleth）</option>
+      </select>
+      <select id="attrSel" style="display:none"></select>
+      <button id="resetBtn">重置</button>
+    </div>
+    <div id="status"></div>
+    <svg id="map" viewBox="0 0 960 640" preserveAspectRatio="xMidYMid meet"></svg>
+    <div class="legend" id="legend"></div>
+  </div>
+
+  <!-- 右：控制 -->
+  <div class="col">
+    <h2>切割控制</h2>
+    <div class="field">
+      <label>切割标准（✓可切 / ✗此区块已无差异）</label>
+      <select id="crit"></select>
+    </div>
+    <div class="field" id="binField" style="display:none">
+      <label>阈值切分点（逗号分隔，升序）</label>
+      <input type="text" id="bins" value="">
+    </div>
+    <div class="field">
+      <label style="display:flex;align-items:center;gap:6px;cursor:pointer;color:var(--text)">
+        <input type="checkbox" id="autoCut" checked> 点击区块即自动切割
+      </label>
+    </div>
+    <div class="field">
+      <button id="autoOne" style="width:100%">自动切一刀（最优标准）</button>
+      <button id="autoDeep" style="width:100%;margin-top:6px">自动下钻到底（≤4层）</button>
+    </div>
+    <div class="field">
+      <button id="cutBtn" style="width:100%;background:var(--accent);color:#06222e;border:none;font-weight:600;padding:8px;border-radius:6px;cursor:pointer">手动切分（当前标准）</button>
+    </div>
+    <div class="stats" id="stats"></div>
+    <h2 style="margin-top:14px">方案</h2>
+    <div class="field">
+      <button id="expBtn" style="width:100%">导出方案 JSON</button>
+      <button id="impBtn" style="width:100%;margin-top:6px">导入方案 JSON</button>
+      <input type="file" id="impFile" accept="application/json" style="display:none">
+    </div>
+    <div class="hint">
+      自然类：地形类型 / 海拔带 / 流域水系 / 气候带<br>
+      人工类：路网密度 / 人口密度 / 铁路覆盖 / 机场可达<br>
+      行政类：省级 / 地级 / 县级（仅在其他标准无法区分时作最后手段）<br>
+      <b style="color:var(--accent)">玩法：</b>勾选"点击即自动切割"后，直接点地图区块就会自动下钻；或用"自动下钻到底"一键分完。下拉框✓=还能切，✗=已无差异（不会再报错）。
+    </div>
+  </div>
+</div>
+
+<script>
+// ---------- 基础配置 ----------
+const LON0=73, LON1=135, LAT0=18, LAT1=54, STEP=1;
+const W=960, H=640;
+const COLS=(LON1-LON0)/STEP, ROWS=(LAT1-LAT0)/STEP;
+const dx=W/COLS, dy=H/ROWS;
+
+// 粗略中国轮廓（经纬度，顺时针），仅作示意，非精确边界
+const CHINA=[
+ [73.5,39.5],[75,37],[76,35],[78,32],[79,34],[81,30],[85,28],[88,27],[91,27.5],[94,28],
+ [97,28],[98,25.5],[97.5,24],[99,22],[101,21],[102,22.5],[106,22],[108,21.5],[110,21],
+ [113,22],[117,24],[120,28],[121,31],[120,34],[118,38],[121,38],[122,40],[124,40],
+ [128,40],[130,42],[131,44],[134,46],[131,48],[126,50],[120,47],[115,45],[110,43],
+ [105,42],[100,42],[96,43],[91,47],[87,49],[85,47],[82,47],[80,45]
+];
+function pip(x,y,poly){let inside=false;for(let i=0,j=poly.length-1;i<poly.length;j=i++){const xi=poly[i][0],yi=poly[i][1],xj=poly[j][0],yj=poly[j][1];const inter=((yi>y)!=(yj>y))&&(x<(xj-xi)*(y-yi)/(yj-yi)+xi);if(inter)inside=!inside;}return inside;}
+function isLand(lon,lat){
+  if(pip(lon,lat,CHINA))return true;
+  const d=(a,b,r)=>Math.hypot(lon-a,lat-b)<=r;
+  if(d(109.8,19.3,1.4))return true;   // 海南
+  if(d(121,23.7,0.9))return true;     // 台湾
+  return false;
+}
+
+// ---------- 合成属性（示意，非真实数据） ----------
+const CITIES=[[116,39],[121,31],[113,23],[104,30],[108,34],[123,42],[87,43],[90,30],[120,30],[114,28],[119,26],[117,36],[115,38],[102,36]];
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+function hash2(lon,lat){return Math.floor(Math.abs(Math.sin(lon*12.9898+lat*78.233)*43758.5453))>>>0;}
+
+function nearCity(lon,lat){let m=0;for(const[cx,cy]of CITIES){m=Math.max(m,Math.exp(-Math.hypot(lon-cx,lat-cy)/9));}return m;}
+
+function makeAttrs(lon,lat){
+  const rng=mulberry32(hash2(lon,lat));
+  const west=(LON1-(lon+0.5))/(LON1-LON0); // 1西 0东
+  const east=1-west;
+  let elev=3200*Math.pow(west,1.4)+250*Math.sin(lon/6)*Math.cos(lat/5)+180*rng();
+  elev+=300*Math.max(0,Math.sin((lon-115)/3))*Math.max(0,Math.cos((lat-30)/4));
+  elev=Math.max(0,Math.round(elev));
+  let terrain;
+  if(elev>3000)terrain='高原';
+  else if(elev>1600)terrain='山地';
+  else if(elev<400&&lon>108)terrain='平原';
+  else if(elev<700)terrain='丘陵';
+  else terrain='盆地';
+  const elevBand=elev<500?'低海拔':elev<1500?'中海拔':elev<3000?'高海拔':'极高海拔';
+  const climate=elev>3000?'高寒':lat>40?'温带':lat>28?'亚热带':'热带';
+  const nc=nearCity(lon,lat);
+  const road=+(0.15+0.8*east*0.7+0.5*nc+0.12*rng()).toFixed(2);
+  const pop=Math.round(road*(0.5+0.5*east)*100*(0.4+0.8*nc)*(0.6+0.6*rng()));
+  const watershed=lon>122?'东北水系':(lat>34&&lon<110?'黄河水系':(lat<=34&&lon<110&&lon>100?'长江水系':(lon<=100?'西部内流':(lon>=110&&lat<25?'珠江水系':'长江水系'))));
+  const rail=(east>0.45&&rng()<0.8)?'有铁路':'无铁路';
+  const airport=(nc>0.4||rng()<0.25)?'有机场':'无机场';
+  let prov;
+  if(lat>42&&lon>115)prov='东北';
+  else if(lon>115)prov='华东';
+  else if(lon>108&&lat>30)prov='华中';
+  else if(lon>108&&lat<=30)prov='华南';
+  else if(lon>100&&lat>30)prov='西南';
+  else if(lon>100)prov='西南/华南';
+  else if(lat>35)prov='华北';
+  else prov='西北';
+  const pref=prov+'·'+(Math.floor((lon)/6)%4);
+  const county=prov+'-'+(Math.floor((lat)/3)%6);
+  return{terrain,elevBand,watershed,climate,road,pop,rail,airport,prov,pref,county,elev};
+}
+
+// 生成网格单元
+const cells=[];
+for(let j=0;j<ROWS;j++){
+  for(let i=0;i<COLS;i++){
+    const lon=LON0+i*STEP, lat=LAT1-j*STEP;
+    if(isLand(lon+STEP/2,lat-STEP/2)){
+      const idx=cells.length;
+      cells.push({idx,lon,lat,attrs:makeAttrs(lon,lat),x:i*dx,y:j*dy});
+    }
+  }
+}
+
+// ---------- 切割引擎 ----------
+const ATTRS={
+  terrain:{label:'地形类型',type:'cat',group:'natural'},
+  elevBand:{label:'海拔带',type:'cat',group:'natural'},
+  watershed:{label:'流域水系',type:'cat',group:'natural'},
+  climate:{label:'气候带',type:'cat',group:'natural'},
+  road:{label:'路网密度',type:'num',group:'human'},
+  pop:{label:'人口密度',type:'num',group:'human'},
+  rail:{label:'铁路覆盖',type:'cat',group:'human'},
+  airport:{label:'机场可达',type:'cat',group:'human'},
+  prov:{label:'省级(行政)',type:'cat',group:'admin'},
+  pref:{label:'地级(行政)',type:'cat',group:'admin'},
+  county:{label:'县级(行政)',type:'cat',group:'admin'},
+};
+
+let nid=0;
+const root={id:++nid,name:'中国(全境)',cells:cells.map(c=>c.idx),children:[],parent:null,cut:null};
+let selectedId=root.id;
+let viewMode='seg';
+let viewAttr='terrain';
+let cellLeaf={};
+
+function nodeById(id){let r=null;(function w(n){if(n.id===id){r=n;return;}n.children.forEach(w);})(root);return r;}
+function leaves(){const out=[];(function w(n){if(!n.children.length)out.push(n);else n.children.forEach(w);})(root);return out;}
+function subtreeCells(n){if(!n.children.length)return n.cells.slice();let a=[];n.children.forEach(c=>a=a.concat(subtreeCells(c)));return a;}
+function rebuildLeafMap(){cellLeaf={};(function w(n){if(!n.children.length)n.cells.forEach(i=>cellLeaf[i]=n.id);else n.children.forEach(w);})(root);}
+
+function cellAttr(idx,c){return cells[idx].attrs[c];}
+
+function applyCut(node,criterion){
+  if(!node)return;
+  if(node.children.length){status('该区块已切分，请选择叶子区块再切分');return;}
+  const a=ATTRS[criterion];
+  const groups={};
+  if(a.type==='cat'){
+    for(const i of node.cells){const k=String(cellAttr(i,criterion));(groups[k]=groups[k]||[]).push(i);}
+  }else{
+    const bins=parseBins(criterion);
+    for(const i of node.cells){const k=binLabel(cellAttr(i,criterion),bins);(groups[k]=groups[k]||[]).push(i);}
+  }
+  const keys=Object.keys(groups);
+  if(keys.length<2){const ap=applicable(node);status('该标准在此区块未产生多个子块；可改试：'+(ap.length?ap.map(k=>ATTRS[k].label).join(' / '):'已无差异'));return;}
+  node.children=keys.map(k=>({id:++nid,name:k,cells:groups[k],children:[],parent:node.id,cut:{criterion}}));
+  status('已切分：'+keys.length+' 个子块');
+  rebuildLeafMap();renderAll();
+}
+
+function binsFor(node,criterion){
+  const raw=document.getElementById('bins').value.trim();
+  if(raw){const arr=raw.split(',').map(Number).filter(x=>!isNaN(x)).sort((a,b)=>a-b);if(arr.length)return arr;}
+  // 自适应三档
+  const vals=node.cells.map(i=>cellAttr(i,criterion));
+  const mn=Math.min(...vals),mx=Math.max(...vals);
+  return [mn+(mx-mn)/3,mn+2*(mx-mn)/3];
+}
+function parseBins(criterion){return binsFor(nodeById(selectedId),criterion);}
+function binLabel(v,bins){
+  if(v<bins[0])return'<'+bins[0];
+  for(let k=0;k<bins.length-1;k++)if(v>=bins[k]&&v<bins[k+1])return bins[k]+'–'+bins[k+1];
+  return'>='+bins[bins.length-1];
+}
+
+// 在当前区块仍能产生≥2子块的标准（按 自然→人工→行政 优先级）
+const PRIORITY=['terrain','elevBand','watershed','climate','road','pop','rail','airport','prov','pref','county'];
+function applicable(node){
+  const out=[];
+  for(const k of PRIORITY){
+    const a=ATTRS[k];let n;
+    if(a.type==='cat'){n=new Set(node.cells.map(i=>String(cellAttr(i,k)))).size;}
+    else{n=new Set(node.cells.map(i=>binLabel(cellAttr(i,k),binsFor(node,k)))).size;}
+    if(n>=2)out.push(k);
+  }
+  return out;
+}
+// 自动用最优标准切一刀
+function autoCut(node){
+  if(!node)return;
+  if(node.children.length){status('该区块已切分，请选叶子区块');return;}
+  const ap=applicable(node);
+  if(!ap.length){status('该区块已无法继续分割（所有标准均无差异）');return;}
+  applyCut(node,ap[0]);
+}
+// 一键自动下钻到底（限深 4）
+function autoDeep(){
+  let guard=0;
+  (function drill(node){
+    if(guard++>400)return;
+    const ap=applicable(node);
+    if(!ap.length)return;
+    applyCut(node,ap[0]);
+    node.children.forEach(drill);
+  })(nodeById(selectedId));
+  status('自动下钻完成');renderAll();
+}
+// 下拉框标注 ✓/✗ 并禁用不可用项
+function updateCritMarks(){
+  const node=nodeById(selectedId);
+  const ap=new Set(applicable(node));
+  const sel=document.getElementById('crit');
+  for(const opt of sel.options){
+    const ok=ap.has(opt.value);
+    opt.disabled=!ok;
+    opt.textContent=(ok?'✓ ':'✗ ')+ATTRS[opt.value].label;
+  }
+  if(!ap.has(sel.value)&&ap.size){sel.value=[...ap][0];onCritChange();}
+}
+
+// ---------- 着色 ----------
+const PALETTE=['#e6194B','#3cb44b','#4363d8','#f58231','#911eb4','#42d4f4','#f032e6','#bfef45','#fabed4','#469990','#dcbeff','#9A6324','#800000','#aaffc3','#808000','#000075','#ff6f00','#c71585'];
+function hashStr(s){let h=0;for(let i=0;i<s.length;i++)h=(h*31+s.charCodeAt(i))>>>0;return h;}
+function lerpColor(t){ // 蓝->青->黄
+  t=Math.max(0,Math.min(1,t));
+  const r=Math.round(40+200*t),g=Math.round(120+100*t),b=Math.round(220-200*t);
+  return`rgb(${r},${g},${b})`;
+}
+function colorOf(cell){
+  if(viewMode==='attr'){
+    const a=ATTRS[viewAttr];const v=cell.attrs[viewAttr];
+    if(a.type==='cat')return PALETTE[hashStr(String(v))%PALETTE.length];
+    const vals=cells.map(c=>c.attrs[viewAttr]);const mn=Math.min(...vals),mx=Math.max(...vals);
+    return lerpColor((v-mn)/(mx-mn||1));
+  }
+  const lv=leaves();const li=lv.findIndex(n=>n.id===cellLeaf[cell.idx]);
+  return PALETTE[li%PALETTE.length];
+}
+
+// ---------- 渲染 ----------
+function renderMap(){
+  const svg=document.getElementById('map');
+  const selSet=new Set(subtreeCells(nodeById(selectedId)));
+  let s='';
+  for(const c of cells){
+    const fill=colorOf(c);
+    const stroke=selSet.has(c.idx)?'#ffd166':'#0b0f14';
+    const sw=selSet.has(c.idx)?1.6:0.4;
+    s+=`<rect class="cell" data-idx="${c.idx}" x="${c.x.toFixed(1)}" y="${c.y.toFixed(1)}" width="${(dx+0.5).toFixed(1)}" height="${(dy+0.5).toFixed(1)}" fill="${fill}" stroke="${stroke}" stroke-width="${sw}"></rect>`;
+  }
+  svg.innerHTML=s;
+  svg.onclick=(e)=>{const r=e.target.closest('rect.cell');if(!r)return;const idx=+r.dataset.idx;const lid=cellLeaf[idx];const node=nodeById(lid);if(document.getElementById('autoCut').checked&&!node.children.length){autoCut(node);}else{selectedId=lid;renderAll();}};
+  renderLegend();
+}
+function renderLegend(){
+  const el=document.getElementById('legend');let h='';
+  if(viewMode==='attr'){
+    const a=ATTRS[viewAttr];
+    if(a.type==='cat'){const vals=[...new Set(cells.map(c=>String(c.attrs[viewAttr])))];vals.forEach(v=>h+=`<span><i style="background:${PALETTE[hashStr(v)%PALETTE.length]}"></i>${v}</span>`);}
+    else{h+=`<span><i style="background:${lerpColor(0)}"></i>低</span><span><i style="background:${lerpColor(0.5)}"></i>中</span><span><i style="background:${lerpColor(1)}"></i>高</span>`;}
+  }else{
+    leaves().forEach((n,i)=>{h+=`<span><i style="background:${PALETTE[i%PALETTE.length]}"></i>${n.name}</span>`;});
+  }
+  el.innerHTML=h;
+}
+function renderTree(){
+  const el=document.getElementById('tree');
+  function nodeHTML(n,depth){
+    const cnt=n.cells.length;
+    let h=`<div class="node ${n.id===selectedId?'sel':''}" data-id="${n.id}">${n.name}<span class="cnt">${cnt}</span>`;
+    if(n.cut)h+=`<span class="cut">← ${ATTRS[n.cut.criterion].label}</span>`;
+    h+=`</div>`;
+    if(n.children.length){h+=`<ul class="tree">`+n.children.map(c=>nodeHTML(c,depth+1)).join('')+`</ul>`;}
+    return h;
+  }
+  el.innerHTML=`<ul class="tree root">${nodeHTML(root,0)}</ul>`;
+  el.querySelectorAll('.node').forEach(d=>d.onclick=(e)=>{e.stopPropagation();const id=+d.dataset.id;const node=nodeById(id);if(document.getElementById('autoCut').checked&&!node.children.length){autoCut(node);}else{selectedId=id;renderAll();}});
+}
+function renderStats(){
+  const n=nodeById(selectedId);
+  const cs=n.cells.map(i=>cells[i]);
+  const dom=(key)=>{const m={};cs.forEach(c=>{const v=String(c.attrs[key]);m[v]=(m[v]||0)+1;});return Object.entries(m).sort((a,b)=>b[1]-a[1])[0][0];};
+  const avg=(key)=>Math.round(cs.reduce((s,c)=>s+c.attrs[key],0)/cs.length);
+  document.getElementById('stats').innerHTML=
+    `<div><b>${n.name}</b></div>`+
+    `<div>单元数：<b>${cs.length}</b></div>`+
+    `<div>主导地形：${dom('terrain')}</div>`+
+    `<div>平均海拔：${avg('elev')} m</div>`+
+    `<div>平均路网：${avg('road')}</div>`+
+    (n.cut?`<div style="color:var(--muted)">切分依据：${ATTRS[n.cut.criterion].label}</div>`:`<div style="color:var(--muted)">根区块（未切分）</div>`)+
+    (function(){const ap=applicable(n);return `<div style="color:var(--muted);margin-top:4px">可继续切分：${ap.length?ap.map(k=>ATTRS[k].label).join('、'):'已无差异（最细）'}</div>`;})();
+}
+function renderAll(){rebuildLeafMap();renderMap();renderTree();renderStats();updateCritMarks();}
+
+// ---------- 控件 ----------
+function buildCritSelect(){
+  const sel=document.getElementById('crit');
+  const groups={natural:'自然类（优先）',human:'人工类',admin:'行政类（最后手段）'};
+  let h='';
+  for(const g of['natural','human','admin']){
+    h+=`<optgroup class="grp ${g}" label="${groups[g]}">`;
+    for(const[k,v]of Object.entries(ATTRS))if(v.group===g)h+=`<option value="${k}">${v.label}</option>`;
+    h+=`</optgroup>`;
+  }
+  sel.innerHTML=h;sel.value='terrain';
+}
+function buildAttrSelect(){
+  const sel=document.getElementById('attrSel');
+  let h='';for(const[k,v]of Object.entries(ATTRS))h+=`<option value="${k}">${v.label}</option>`;
+  sel.innerHTML=h;sel.value='terrain';
+}
+function onCritChange(){
+  const c=document.getElementById('crit').value;
+  const a=ATTRS[c];
+  document.getElementById('binField').style.display=a.type==='num'?'block':'none';
+  if(a.type==='num'){const vals=nodeById(selectedId).cells.map(i=>cellAttr(i,c));const mn=Math.min(...vals),mx=Math.max(...vals);document.getElementById('bins').value=[mn+(mx-mn)/3,mn+2*(mx-mn)/3].map(x=>x.toFixed(1)).join(', ');}
+}
+function status(t){document.getElementById('status').textContent=t||'';}
+
+document.getElementById('cutBtn').onclick=()=>applyCut(nodeById(selectedId),document.getElementById('crit').value);
+document.getElementById('crit').onchange=onCritChange;
+document.getElementById('autoOne').onclick=()=>autoCut(nodeById(selectedId));
+document.getElementById('autoDeep').onclick=()=>autoDeep();
+document.getElementById('resetBtn').onclick=()=>{root.children=[];selectedId=root.id;status('已重置');renderAll();};
+document.getElementById('viewMode').onchange=(e)=>{viewMode=e.target.value;document.getElementById('attrSel').style.display=viewMode==='attr'?'block':'none';renderMap();};
+document.getElementById('attrSel').onchange=(e)=>{viewAttr=e.target.value;renderMap();};
+
+// 方案导出/导入
+document.getElementById('expBtn').onclick=()=>{
+  const ser=(n)=>({name:n.name,cut:n.cut?{criterion:n.cut.criterion}:null,children:n.children.map(ser)});
+  const data=JSON.stringify(ser(root));
+  const blob=new Blob([data],{type:'application/json'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='segment-recipe.json';a.click();
+};
+document.getElementById('impBtn').onclick=()=>document.getElementById('impFile').click();
+document.getElementById('impFile').onchange=(e)=>{
+  const f=e.target.files[0];if(!f)return;const r=new FileReader();
+  r.onload=()=>{try{const spec=JSON.parse(r.result);root.children=[];replay(spec,root);selectedId=root.id;renderAll();status('方案已导入');}catch(err){status('导入失败：'+err.message);}};
+  r.readAsText(f);
+};
+function replay(spec,node){
+  if(!spec.children||!spec.children.length)return;
+  for(const cs of spec.children)applyCut(node,cs.cut.criterion);
+  for(let k=0;k<spec.children.length;k++)replay(spec.children[k],node.children[k]);
+}
+
+// ---------- 初始化 ----------
+buildCritSelect();buildAttrSelect();onCritChange();
+rebuildLeafMap();
+// 默认首切：自然类-地形类型，立即展示非行政的天然分割
+applyCut(root,'terrain');
+selectedId=root.id;
+renderAll();
+</script>
+</body>
+</html>
